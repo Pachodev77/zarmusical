@@ -340,7 +340,77 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- VISUALIZADOR MÁS DINÁMICO Y RÍTMICO ---
     let prevHeights = [];
-    function drawVisualizer() {
+    // Nuevo visualizador profesional de barras
+
+function drawVisualizer() {
+    requestAnimationFrame(drawVisualizer);
+    const canvas = document.getElementById('visualizer');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // Ajustar tamaño del canvas al contenedor
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    // Obtener datos de frecuencia
+    if (!window.analyser || !window.dataArray) return;
+    window.analyser.getByteFrequencyData(window.dataArray);
+
+    // Parámetros visuales
+    const barCount = 48; // Número de barras visible
+    const barWidth = canvas.width / barCount;
+    const maxBarHeight = canvas.height * 0.92;
+    const spacing = Math.max(1, barWidth * 0.18);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Fondo suave
+    ctx.fillStyle = 'rgba(30,30,30,0.17)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Mapeo lineal de frecuencias (parejo)
+    for (let i = 0; i < barCount; i++) {
+        // Tomar el rango correspondiente de dataArray
+        const binSize = Math.floor(window.dataArray.length / barCount);
+        let sum = 0;
+        for (let j = 0; j < binSize; j++) {
+            sum += window.dataArray[i * binSize + j];
+        }
+        const avg = sum / binSize;
+        // Normalizar altura
+        const barHeight = Math.min((avg / 255) * maxBarHeight, maxBarHeight);
+        // Color profesional: gradiente azul a verde
+        const grad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
+        grad.addColorStop(0, '#00ffe7');
+        grad.addColorStop(1, '#0aff7b');
+        ctx.fillStyle = grad;
+        // Sombra sutil
+        ctx.shadowColor = '#00ffe7';
+        ctx.shadowBlur = 8;
+        // Dibujar barra centrada
+        const x = i * barWidth + spacing / 2;
+        ctx.fillRect(x, canvas.height - barHeight, barWidth - spacing, barHeight);
+        ctx.shadowBlur = 0;
+    }
+}
+
+// Inicialización del visualizador (AudioContext y AnalyserNode)
+function setupVisualizer() {
+    const audio = window.audio;
+    if (!audio) return;
+    if (!window.audioContext) {
+        window.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (!window.analyser) {
+        window.analyser = window.audioContext.createAnalyser();
+        window.analyser.fftSize = 2048;
+        window.dataArray = new Uint8Array(window.analyser.frequencyBinCount);
+        // Conectar audio al analyser
+        const source = window.audioContext.createMediaElementSource(audio);
+        source.connect(window.analyser);
+        window.analyser.connect(window.audioContext.destination);
+    }
+}
+
         requestAnimationFrame(drawVisualizer);
 
         // Set canvas dimensions to match its displayed size
@@ -479,5 +549,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Init
     fetchPlaylists();
+    setupVisualizer();
     drawVisualizer();
 });
