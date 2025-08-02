@@ -382,9 +382,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const GAIN = 1.6;
         const EASING = 0.30; // Suavizado
 
+        // --- Distribución logarítmica para frecuencias parejas ---
         for (let i = 0; i < barCount; i++) {
+            // Mapeo logarítmico del índice de barra al índice real de frecuencia
+            let logIndex = Math.log10(1 + 9 * (i / (barCount - 1))); // de 0 a 1 en escala log
+            let dataIdx = Math.floor(logIndex * (barCount - 1));
+            
             // Aplica ganancia y suavizado para que "bailen" más
-            let target = dataArray[i] * GAIN;
+            let target = dataArray[dataIdx] * GAIN;
             let eased = prevHeights[i] + (target - prevHeights[i]) * EASING;
             prevHeights[i] = eased;
             let barHeight = eased;
