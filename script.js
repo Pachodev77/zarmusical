@@ -496,12 +496,6 @@ function setupVisualizer() {
             visualizerCtx.shadowBlur = 12;
 
             // Dibuja barra
-            visualizerCtx.fillRect(x, visualizer.height - barHeight, barWidth - 1, barHeight);
-            visualizerCtx.shadowBlur = 0;
-            x += barWidth;
-        }
-    }
-
     playPauseBtn.addEventListener('click', playPauseToggle);
     prevBtn.addEventListener('click', prevSong);
     nextBtn.addEventListener('click', nextSong);
