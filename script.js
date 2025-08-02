@@ -338,6 +338,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- VISUALIZADOR MÁS DINÁMICO Y RÍTMICO ---
+    let prevHeights = [];
     function drawVisualizer() {
         requestAnimationFrame(drawVisualizer);
 
@@ -345,14 +347,14 @@ document.addEventListener('DOMContentLoaded', () => {
         visualizer.width = visualizer.offsetWidth;
         visualizer.height = visualizer.offsetHeight;
 
-        hue = (hue + 0.5) % 360;
+        hue = (hue + 1.2) % 360;
 
         // Update CSS variables for dynamic coloring
         const primaryColor = `hsl(${hue}, 100%, 50%)`;
         const shadowColor = `hsla(${hue}, 100%, 50%, 0.5)`;
         const darkBackgroundColor = `hsl(${hue}, 30%, 10%)`;
-        const lightBackgroundColor = `hsl(${hue}, 20%, 15%)`; // Slightly lighter for container
-        const textColor = `hsl(${hue}, 10%, 90%)`; // Adjust text color for contrast
+        const lightBackgroundColor = `hsl(${hue}, 20%, 15%)`;
+        const textColor = `hsl(${hue}, 10%, 90%)`;
 
         document.documentElement.style.setProperty('--primary-color', primaryColor);
         document.documentElement.style.setProperty('--shadow-color', shadowColor);
@@ -365,24 +367,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
         analyser.getByteFrequencyData(dataArray);
         
-        // Añade un sutil efecto de desvanecimiento para dejar estelas
-        visualizerCtx.fillStyle = 'rgba(30, 30, 30, 0.1)';
+        // Efecto de estela más pronunciado
+        visualizerCtx.fillStyle = 'rgba(30, 30, 30, 0.07)';
         visualizerCtx.fillRect(0, 0, visualizer.width, visualizer.height);
 
-        const barCount = bufferLength; // Use bufferLength for the number of bars
-        const barWidth = visualizer.width / barCount; // Calculate bar width to fill the container
+        const barCount = bufferLength;
+        const barWidth = visualizer.width / barCount;
         let x = 0;
 
+        // Inicializar suavizado
+        if (prevHeights.length !== barCount) prevHeights = Array(barCount).fill(0);
+
+        // Ganancia para barras más altas
+        const GAIN = 1.6;
+        const EASING = 0.30; // Suavizado
+
         for (let i = 0; i < barCount; i++) {
-            barHeight = dataArray[i] * 0.9; // Escala las barras para un look más limpio
-            
-            if (barHeight > 0) {
-                // Calcula el color de cada barra para crear un efecto arcoíris
-                const barHue = (hue + i * 2) % 360;
-                visualizerCtx.fillStyle = `hsl(${barHue}, 100%, 50%)`;
-                visualizerCtx.fillRect(x, visualizer.height - barHeight, barWidth - 1, barHeight); // Subtract 1 for a small gap
+            // Aplica ganancia y suavizado para que "bailen" más
+            let target = dataArray[i] * GAIN;
+            let eased = prevHeights[i] + (target - prevHeights[i]) * EASING;
+            prevHeights[i] = eased;
+            let barHeight = eased;
+
+            // Rebote dinámico (más movimiento en graves)
+            if (i < barCount * 0.15) {
+                barHeight += Math.abs(Math.sin(Date.now()/140 + i)) * 18;
             }
-            
+
+            // Gradiente dinámico
+            let grad = visualizerCtx.createLinearGradient(x, visualizer.height, x, visualizer.height - barHeight);
+            grad.addColorStop(0, `hsl(${(hue + i*3)%360},100%,60%)`);
+            grad.addColorStop(1, `hsl(${(hue + i*7)%360},100%,40%)`);
+            visualizerCtx.fillStyle = grad;
+
+            // Sombra para profundidad
+            visualizerCtx.shadowColor = `hsl(${(hue + i*2)%360},100%,40%)`;
+            visualizerCtx.shadowBlur = 12;
+
+            // Dibuja barra
+            visualizerCtx.fillRect(x, visualizer.height - barHeight, barWidth - 1, barHeight);
+            visualizerCtx.shadowBlur = 0;
             x += barWidth;
         }
     }
