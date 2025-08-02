@@ -379,55 +379,57 @@ document.addEventListener('DOMContentLoaded', () => {
         if (prevHeights.length !== barCount) prevHeights = Array(barCount).fill(0);
 
         // Ganancia para barras más altas
-        const GAIN = 1.6;
+        const GAIN = 2.0;
         const EASING = 0.30; // Suavizado
 
         // --- Distribución logarítmica para frecuencias parejas ---
         // --- Visualizador con bandas y compensación de sensibilidad ---
-const minBand = 2; // bandas mínimas para evitar saturación en graves
-const maxBand = 12; // bandas máximas para evitar saturación en agudos
-for (let i = 0; i < barCount; i++) {
-    // Rango de frecuencias para cada barra (bandas más anchas en graves, más finas en agudos)
-    let startIdx = Math.floor((i / barCount) ** 1.7 * (barCount - minBand));
-    let endIdx = Math.floor(((i + 1) / barCount) ** 1.7 * (barCount - minBand)) + minBand;
-    if (endIdx <= startIdx) endIdx = startIdx + 1;
-    let sum = 0;
-    for (let j = startIdx; j < endIdx; j++) {
-        sum += dataArray[j];
-    }
-    let avg = sum / (endIdx - startIdx);
+        const minBand = 2;
+        const maxBand = 12;
+        for (let i = 0; i < barCount; i++) {
+            // Rango de frecuencias para cada barra (bandas más anchas en graves, más finas en agudos)
+            let startIdx = Math.floor((i / barCount) ** 1.45 * (barCount - minBand));
+            let endIdx = Math.floor(((i + 1) / barCount) ** 1.45 * (barCount - minBand)) + minBand;
+            if (endIdx <= startIdx) endIdx = startIdx + 1;
+            let sum = 0;
+            for (let j = startIdx; j < endIdx; j++) {
+                sum += dataArray[j];
+            }
+            let avg = sum / (endIdx - startIdx);
 
-    // Compresión fuerte en graves para que nunca se saturen
-    let compensation = 0.7 + 1.3 * (i / (barCount - 1)); // 0.7x en graves, hasta 2x en agudos
-    let target = avg * GAIN * compensation;
-    // Aplica raíz cuadrada solo a las primeras barras (primer 25%)
-    if (i < barCount * 0.25) {
-        target = Math.sqrt(target) * 12; // ajusta el factor para que no sea muy bajo
-    }
-    let eased = prevHeights[i] + (target - prevHeights[i]) * EASING;
-    prevHeights[i] = eased;
-    let barHeight = eased;
+            // Compensación: menos compresión en graves y más impulso en agudos
+            let compensation = 1.1 + 2.2 * (i / (barCount - 1)); // 1.1x en graves, hasta 3.3x en agudos
+            let target = avg * GAIN * compensation;
+            // Compresión más suave en graves
+            if (i < barCount * 0.25) {
+                target = Math.pow(target, 0.7) * 7.5; // compresión menos agresiva
+            }
+            let eased = prevHeights[i] + (target - prevHeights[i]) * EASING;
+            prevHeights[i] = eased;
+            let barHeight = eased;
+            // Límite máximo visual para TODAS las barras (95%)
+            barHeight = Math.min(barHeight, visualizer.height * 0.95);
 
-    // Rebote dinámico (más movimiento en graves)
-    if (i < barCount * 0.15) {
-        barHeight += Math.abs(Math.sin(Date.now()/140 + i)) * 18;
-    }
+            // Rebote dinámico (más movimiento en graves)
+            if (i < barCount * 0.15) {
+                barHeight += Math.abs(Math.sin(Date.now()/140 + i)) * 18;
+            }
 
-    // Gradiente dinámico
-    let grad = visualizerCtx.createLinearGradient(x, visualizer.height, x, visualizer.height - barHeight);
-    grad.addColorStop(0, `hsl(${(hue + i*3)%360},100%,60%)`);
-    grad.addColorStop(1, `hsl(${(hue + i*7)%360},100%,40%)`);
-    visualizerCtx.fillStyle = grad;
+            // Gradiente dinámico
+            let grad = visualizerCtx.createLinearGradient(x, visualizer.height, x, visualizer.height - barHeight);
+            grad.addColorStop(0, `hsl(${(hue + i*3)%360},100%,60%)`);
+            grad.addColorStop(1, `hsl(${(hue + i*7)%360},100%,40%)`);
+            visualizerCtx.fillStyle = grad;
 
-    // Sombra para profundidad
-    visualizerCtx.shadowColor = `hsl(${(hue + i*2)%360},100%,40%)`;
-    visualizerCtx.shadowBlur = 12;
+            // Sombra para profundidad
+            visualizerCtx.shadowColor = `hsl(${(hue + i*2)%360},100%,40%)`;
+            visualizerCtx.shadowBlur = 12;
 
-    // Dibuja barra
-    visualizerCtx.fillRect(x, visualizer.height - barHeight, barWidth - 1, barHeight);
-    visualizerCtx.shadowBlur = 0;
-    x += barWidth;
-}
+            // Dibuja barra
+            visualizerCtx.fillRect(x, visualizer.height - barHeight, barWidth - 1, barHeight);
+            visualizerCtx.shadowBlur = 0;
+            x += barWidth;
+        }
     }
 
     playPauseBtn.addEventListener('click', playPauseToggle);
