@@ -397,9 +397,13 @@ for (let i = 0; i < barCount; i++) {
     }
     let avg = sum / (endIdx - startIdx);
 
-    // Curva de compensación: más sensibilidad en agudos (derecha)
+    // Compresión fuerte en graves para que nunca se saturen
     let compensation = 0.7 + 1.3 * (i / (barCount - 1)); // 0.7x en graves, hasta 2x en agudos
     let target = avg * GAIN * compensation;
+    // Aplica raíz cuadrada solo a las primeras barras (primer 25%)
+    if (i < barCount * 0.25) {
+        target = Math.sqrt(target) * 12; // ajusta el factor para que no sea muy bajo
+    }
     let eased = prevHeights[i] + (target - prevHeights[i]) * EASING;
     prevHeights[i] = eased;
     let barHeight = eased;
