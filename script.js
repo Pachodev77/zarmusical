@@ -423,7 +423,7 @@ for (let i = 0; i < barCount; i++) {
     visualizerCtx.fillRect(x, visualizer.height - barHeight, barWidth - 1, barHeight);
     visualizerCtx.shadowBlur = 0;
     x += barWidth;
-}        }
+}
     }
 
     playPauseBtn.addEventListener('click', playPauseToggle);
