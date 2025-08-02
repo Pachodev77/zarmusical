@@ -520,8 +520,6 @@ function setupVisualizer() {
         loadSong(currentSongIndex);
         playSong();
     }
-});
-
     repeatBtn.addEventListener('click', () => {
         isRepeat = !isRepeat;
         repeatBtn.classList.toggle('active', isRepeat);
@@ -545,4 +543,5 @@ function setupVisualizer() {
     fetchPlaylists();
     setupVisualizer();
     drawVisualizer();
-});
+}
+);
