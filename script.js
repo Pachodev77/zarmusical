@@ -174,8 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const visualizer = document.getElementById('visualizer');
     const visualizerCtx = visualizer.getContext('2d');
     const categoryBtns = document.querySelectorAll('.category-btn');
-    const zarMusicalTitle = document.getElementById('zar-musical-title');
-    const titleSpans = zarMusicalTitle ? zarMusicalTitle.querySelectorAll('span') : [];
+    const sonidoCallejeroTitle = document.getElementById('sonido-callejero-title');
+    const titleSpans = sonidoCallejeroTitle ? sonidoCallejeroTitle.querySelectorAll('span') : [];
 
     function changeCategory(category, keepShuffle = false) {
         currentPlaylist = category;
@@ -334,83 +334,14 @@ document.addEventListener('DOMContentLoaded', () => {
         titleSpans.forEach((span, index) => {
             const letterHue = (titleHueOffset + index * 30) % 360; // Different color for each letter
             span.style.color = `hsl(${letterHue}, 100%, 50%)`;
-            span.style.textShadow = `0 0 10px hsl(${letterHue}, 100%, 50%)`;
+            span.style.webkitTextStroke = '2px #fff';
+            span.style.textStroke = '2px #fff';
         });
     }
 
     // --- VISUALIZADOR MÁS DINÁMICO Y RÍTMICO ---
     let prevHeights = [];
-    // Nuevo visualizador profesional de barras
-
-function drawVisualizer() {
-    requestAnimationFrame(drawVisualizer);
-    const canvas = document.getElementById('visualizer');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-
-    // Ajustar tamaño del canvas al contenedor
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-
-    // Obtener datos de frecuencia
-    if (!window.analyser || !window.dataArray) return;
-    window.analyser.getByteFrequencyData(window.dataArray);
-
-    // Parámetros visuales
-    const barCount = 48; // Número de barras visible
-    const barWidth = canvas.width / barCount;
-    const maxBarHeight = canvas.height * 0.92;
-    const spacing = Math.max(1, barWidth * 0.18);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Fondo suave
-    ctx.fillStyle = 'rgba(30,30,30,0.17)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Mapeo lineal de frecuencias (parejo)
-    for (let i = 0; i < barCount; i++) {
-        // Tomar el rango correspondiente de dataArray
-        const binSize = Math.floor(window.dataArray.length / barCount);
-        let sum = 0;
-        for (let j = 0; j < binSize; j++) {
-            sum += window.dataArray[i * binSize + j];
-        }
-        const avg = sum / binSize;
-        // Normalizar altura
-        const barHeight = Math.min((avg / 255) * maxBarHeight, maxBarHeight);
-        // Color profesional: gradiente azul a verde
-        const grad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
-        grad.addColorStop(0, '#00ffe7');
-        grad.addColorStop(1, '#0aff7b');
-        ctx.fillStyle = grad;
-        // Sombra sutil
-        ctx.shadowColor = '#00ffe7';
-        ctx.shadowBlur = 8;
-        // Dibujar barra centrada
-        const x = i * barWidth + spacing / 2;
-        ctx.fillRect(x, canvas.height - barHeight, barWidth - spacing, barHeight);
-        ctx.shadowBlur = 0;
-    }
-}
-
-// Inicialización del visualizador (AudioContext y AnalyserNode)
-function setupVisualizer() {
-    const audio = window.audio;
-    if (!audio) return;
-    if (!window.audioContext) {
-        window.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (!window.analyser) {
-        window.analyser = window.audioContext.createAnalyser();
-        window.analyser.fftSize = 2048;
-        window.dataArray = new Uint8Array(window.analyser.frequencyBinCount);
-        // Conectar audio al analyser
-        const source = window.audioContext.createMediaElementSource(audio);
-        source.connect(window.analyser);
-        window.analyser.connect(window.audioContext.destination);
-    }
-}
-
+    function drawVisualizer() {
         requestAnimationFrame(drawVisualizer);
 
         // Set canvas dimensions to match its displayed size
@@ -449,53 +380,61 @@ function setupVisualizer() {
         if (prevHeights.length !== barCount) prevHeights = Array(barCount).fill(0);
 
         // Ganancia para barras más altas
-        const GAIN = 2.0;
+        const GAIN = 1.6;
         const EASING = 0.30; // Suavizado
 
         // --- Distribución logarítmica para frecuencias parejas ---
         // --- Visualizador con bandas y compensación de sensibilidad ---
-        const minBand = 2;
-        const maxBand = 12;
-        for (let i = 0; i < barCount; i++) {
-            // Rango de frecuencias para cada barra (bandas más anchas en graves, más finas en agudos)
-            let startIdx = Math.floor((i / barCount) ** 1.45 * (barCount - minBand));
-            let endIdx = Math.floor(((i + 1) / barCount) ** 1.45 * (barCount - minBand)) + minBand;
-            if (endIdx <= startIdx) endIdx = startIdx + 1;
-            let sum = 0;
-            for (let j = startIdx; j < endIdx; j++) {
-                sum += dataArray[j];
-            }
-            let avg = sum / (endIdx - startIdx);
+const minBand = 2; // bandas mínimas para evitar saturación en graves
+const maxBand = 12; // bandas máximas para evitar saturación en agudos
+for (let i = 0; i < barCount; i++) {
+    // Rango de frecuencias para cada barra (bandas más anchas en graves, más finas en agudos)
+    let startIdx = Math.floor((i / barCount) ** 1.7 * (barCount - minBand));
+    let endIdx = Math.floor(((i + 1) / barCount) ** 1.7 * (barCount - minBand)) + minBand;
+    if (endIdx <= startIdx) endIdx = startIdx + 1;
+    let sum = 0;
+    for (let j = startIdx; j < endIdx; j++) {
+        sum += dataArray[j];
+    }
+    let avg = sum / (endIdx - startIdx);
 
-            // Compensación: menos compresión en graves y más impulso en agudos
-            let compensation = 1.1 + 2.2 * (i / (barCount - 1)); // 1.1x en graves, hasta 3.3x en agudos
-            let target = avg * GAIN * compensation;
-            // Compresión más suave en graves
-            if (i < barCount * 0.25) {
-                target = Math.pow(target, 0.7) * 7.5; // compresión menos agresiva
-            }
-            let eased = prevHeights[i] + (target - prevHeights[i]) * EASING;
-            prevHeights[i] = eased;
-            let barHeight = eased;
-            // Límite máximo visual para TODAS las barras (95%)
-            barHeight = Math.min(barHeight, visualizer.height * 0.95);
+    // Compresión y límite fuerte en graves para que nunca se saturen visualmente
+    let compensation = 0.7 + 1.3 * (i / (barCount - 1)); // 0.7x en graves, hasta 2x en agudos
+    let target = avg * GAIN * compensation;
+    // Aplica compresión exponencial y límite duro a las primeras barras (primer 25%)
+    if (i < barCount * 0.25) {
+        target = Math.pow(target, 0.4) * 13; // compresión fuerte
+    }
+    let eased = prevHeights[i] + (target - prevHeights[i]) * EASING;
+    prevHeights[i] = eased;
+    let barHeight = eased;
+    // Límite máximo visual para las primeras barras
+    if (i < barCount * 0.25) {
+        barHeight = Math.min(barHeight, visualizer.height * 0.35);
+    }
 
-            // Rebote dinámico (más movimiento en graves)
-            if (i < barCount * 0.15) {
-                barHeight += Math.abs(Math.sin(Date.now()/140 + i)) * 18;
-            }
+    // Rebote dinámico (más movimiento en graves)
+    if (i < barCount * 0.15) {
+        barHeight += Math.abs(Math.sin(Date.now()/140 + i)) * 18;
+    }
 
-            // Gradiente dinámico
-            let grad = visualizerCtx.createLinearGradient(x, visualizer.height, x, visualizer.height - barHeight);
-            grad.addColorStop(0, `hsl(${(hue + i*3)%360},100%,60%)`);
-            grad.addColorStop(1, `hsl(${(hue + i*7)%360},100%,40%)`);
-            visualizerCtx.fillStyle = grad;
+    // Gradiente dinámico
+    let grad = visualizerCtx.createLinearGradient(x, visualizer.height, x, visualizer.height - barHeight);
+    grad.addColorStop(0, `hsl(${(hue + i*3)%360},100%,60%)`);
+    grad.addColorStop(1, `hsl(${(hue + i*7)%360},100%,40%)`);
+    visualizerCtx.fillStyle = grad;
 
-            // Sombra para profundidad
-            visualizerCtx.shadowColor = `hsl(${(hue + i*2)%360},100%,40%)`;
-            visualizerCtx.shadowBlur = 12;
+    // Sombra para profundidad
+    visualizerCtx.shadowColor = `hsl(${(hue + i*2)%360},100%,40%)`;
+    visualizerCtx.shadowBlur = 12;
 
-            // Dibuja barra
+    // Dibuja barra
+    visualizerCtx.fillRect(x, visualizer.height - barHeight, barWidth - 1, barHeight);
+    visualizerCtx.shadowBlur = 0;
+    x += barWidth;
+}
+    }
+
     playPauseBtn.addEventListener('click', playPauseToggle);
     prevBtn.addEventListener('click', prevSong);
     nextBtn.addEventListener('click', nextSong);
@@ -520,6 +459,8 @@ function setupVisualizer() {
         loadSong(currentSongIndex);
         playSong();
     }
+});
+
     repeatBtn.addEventListener('click', () => {
         isRepeat = !isRepeat;
         repeatBtn.classList.toggle('active', isRepeat);
@@ -541,7 +482,5 @@ function setupVisualizer() {
 
     // Init
     fetchPlaylists();
-    setupVisualizer();
     drawVisualizer();
-}
-);
+});
