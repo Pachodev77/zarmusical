@@ -632,4 +632,5 @@ function animateTitleColors(hue) {
         controls.forEach(ctrl => ctrl.disabled = !enabled);
     }
     drawVisualizer();
+} // <-- cierre de DOMContentLoaded
 });
