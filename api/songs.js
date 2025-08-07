@@ -2,50 +2,97 @@ const fs = require('fs');
 const path = require('path');
 
 export default function handler(req, res) {
+  // Playlist única con todos los enlaces del usuario
   const playlists = {
     urbano: [
-      {
-        title: "Calle 13 - Atrévete",
-        artist: "Calle 13",
-        src: "https://drive.google.com/uc?export=download&id=1A2B3C4D5E6F7G8H9I0J",
-        cover: "https://drive.google.com/uc?export=view&id=1A2B3C4D5E6F7G8H9I0J"
-      },
-      {
-        title: "Residente - Bellacoso",
-        artist: "Residente ft. Bad Bunny",
-        src: "https://drive.google.com/uc?export=download&id=2B3C4D5E6F7G8H9I0J1A",
-        cover: "https://drive.google.com/uc?export=view&id=2B3C4D5E6F7G8H9I0J1A"
-      }
-    ],
-    latino: [
-      {
-        title: "Shakira - Hips Don't Lie",
-        artist: "Shakira ft. Wyclef Jean",
-        src: "https://drive.google.com/uc?export=download&id=3C4D5E6F7G8H9I0J1A2B",
-        cover: "https://drive.google.com/uc?export=view&id=3C4D5E6F7G8H9I0J1A2B"
-      },
-      {
-        title: "Luis Fonsi - Despacito",
-        artist: "Luis Fonsi ft. Daddy Yankee",
-        src: "https://drive.google.com/uc?export=download&id=4D5E6F7G8H9I0J1A2B3C",
-        cover: "https://drive.google.com/uc?export=view&id=4D5E6F7G8H9I0J1A2B3C"
-      }
+      { title: "Dark Boy - Gangsta Track feat. Tupac & 50 Cent", artist: "", src: "https://drive.google.com/uc?export=download&id=1HRVBZTA9UgdISnIAYT4XcQSt11hjlI8n" },
+      { title: "Notorious BIG, Frank Sinatra Everyday Struggle A Day in the Life of a Fool REMIX", artist: "", src: "https://drive.google.com/uc?export=download&id=1upv4UbcSlqAdX6QMEj1K8WbXmwhVz-Fg" },
+      { title: "2Pac - Pistol To My Head Remix", artist: "", src: "https://drive.google.com/uc?export=download&id=1kth7rad3KgjKiHEKVk7-BkU3uJ_8ay_v" },
+      { title: "The Notorious B.I.G. ft. 2Pac - Runnin' (Izzamuzzic Remix)24 hours in criminal LA", artist: "", src: "https://drive.google.com/uc?export=download&id=1bO2WE4xVKeHvfMdjM2humN37htCMHmnh" },
+      { title: "Notorious B.I.G. - Suicidal Thoughts [L'indécis Remix]", artist: "", src: "https://drive.google.com/uc?export=download&id=1Js-NQr6bFGvJwGFA-CQz7Li8sHKtSa6-" },
+      { title: "Before The Great Collapse", artist: "", src: "https://drive.google.com/uc?export=download&id=1Tjx1BP975CDfJX57QFussCA_GdWDXPqQ" },
+      { title: "ap.9-questions", artist: "", src: "https://drive.google.com/uc?export=download&id=1rZnAcjJdveoWQ8oRcQYj9n3XzThhwZOz" },
+      { title: "animal_rap_(ft._kool_g._rap)", artist: "", src: "https://drive.google.com/uc?export=download&id=1oRgJksftUTB4WJ7apuy2UJDTQ0iB10iZ" },
+      { title: "2Pac - Hit 'Em Up (Dirty) (Official Video) HD", artist: "", src: "https://drive.google.com/uc?export=download&id=1txJTc3a5DsCPxUmUzn5Z1sqT6LfkDxLB" },
+      { title: "2pac - Gangsta Party", artist: "", src: "https://drive.google.com/uc?export=download&id=1TDXu23sFedmf83p2k4Vmn5LIveMSXbAI" },
+      { title: "Three 6 Mafia - Stay Fly", artist: "", src: "https://drive.google.com/uc?export=download&id=15munU-ckScgo243JwpJjZ9QcAl-4elt7" },
+      { title: "M.O.P - Cold as Ice", artist: "", src: "https://drive.google.com/uc?export=download&id=1Qt1SRM8PtMSFVi787ZrX1OZpCDYsXQtK" },
+      { title: "DMX - X Gon' Give It To Ya", artist: "", src: "https://drive.google.com/uc?export=download&id=19Pkh0oYMZcQ8tzpwW2cevv2v3REMAh9w" },
+      { title: "50 Cent - In Da Club", artist: "", src: "https://drive.google.com/uc?export=download&id=1YiwMryo3PxEGjeyxZttnv3x2TiYFxiLx" },
+      { title: "Snoop Dogg Feat. Nate Dogg & Xzibit - Bitch Please", artist: "", src: "https://drive.google.com/uc?export=download&id=1buyYA6cfnOkAbgpnAdDansDikKU3X-vU" },
+      { title: "The Game Run Up. feat.  Ice Cube & YG.", artist: "", src: "https://drive.google.com/uc?export=download&id=1c7HiwpAPA23n_aHKWUGllfMryhlSvO7E" },
+      { title: "Dope Boys", artist: "", src: "https://drive.google.com/uc?export=download&id=1jE-8Dz0iywUBtilGGSDFi9sr4WelhjCn" },
+      { title: "The Game - Block Wars", artist: "", src: "https://drive.google.com/uc?export=download&id=12uEnaCeb8n_6O-1bhHOYumn3yyfrCm3E" },
+      { title: "Bow Wow feat. Snoop Dogg - That's My Name", artist: "", src: "https://drive.google.com/uc?export=download&id=174dGpkfSdrKKuRongWrFosXMrsEXYV2X" },
+      { title: "The Game - Put You On The Game", artist: "", src: "https://drive.google.com/uc?export=download&id=1o-kV5HjzdZneh7hCT1EniJibPpqK97xo" },
+      { title: "The Game - How We Do", artist: "", src: "https://drive.google.com/uc?export=download&id=15386E2Fy6qdnx5Z4FCxl61VbSeLtjFhe" },
+      { title: "Snoop Dogg - Drop It Like It's Hot ft. Pharrell Williams", artist: "", src: "https://drive.google.com/uc?export=download&id=1jbJS9fspPpht5qvq4CjsmXrBZ5v5ZY8S" },
+      { title: "Trick Trick - Welcome 2 Detroit ft. Eminem", artist: "", src: "https://drive.google.com/uc?export=download&id=1mD-VS_Qw5DE_Ob7Je9QVRbkHgjWVQKvD" },
+      { title: "The Game - My Life ft. Lil Wayne", artist: "", src: "https://drive.google.com/uc?export=download&id=1wdBz6Xx5NnIlvU39F0fQQ67p0fpBoNPL" },
+      { title: "Tapout (Explicit)", artist: "", src: "https://drive.google.com/uc?export=download&id=1j9HcJQN5NytweLy1icyp_Vei-nQhDjrq" },
+      { title: "Rocko - You Don't Even Know It (Feat. Future & Rick Ross)", artist: "", src: "https://drive.google.com/uc?export=download&id=1-0G71FECP0cuNJAscWxV2Tqg7mGhswaP" },
+      { title: "Sean Paul ft Blu Cantrel-Breath", artist: "", src: "https://drive.google.com/uc?export=download&id=1hPtzJ9yrkhcwGD1hy8ngkbnCClb7bDVD" },
+      { title: "Petey Pablo - Raise Up (Lyrics)", artist: "", src: "https://drive.google.com/uc?export=download&id=1tMABisxXAnhK_k3pW8YpNMrNj29XkAs2" },
+      { title: "Mobb Deep feat. LIL JON - REAL GANGSTAZ UNCENSORED High Quality", artist: "", src: "https://drive.google.com/uc?export=download&id=1I9jy1s5sS0ymMyh3b7c0tjergAyt97Qz" },
+      { title: "Mobb Deep - Shook Ones Part II (HD)", artist: "", src: "https://drive.google.com/uc?export=download&id=1uaZIsNkAIBVaCD5unSK9P5XJK_BN952h" },
+      { title: "Lil Wayne - Love Me (Explicit) ft. Drake, Future", artist: "", src: "https://drive.google.com/uc?export=download&id=1R39Yidh17RbHIFWQ8kfeldkZcWS0Qlsk" },
+      { title: "Lil Wayne ft.The game ''my life''", artist: "", src: "https://drive.google.com/uc?export=download&id=1Wr6DbI7duL7jmH0TlAfOMTR13b-0Pffh" },
+      { title: "Gang Starr- Battle with Lyrics", artist: "", src: "https://drive.google.com/uc?export=download&id=1D7mSonCU_oLU35s-L6N23uVmNTouqno0" },
+      { title: "Eminem  -  Superman", artist: "", src: "https://drive.google.com/uc?export=download&id=1GKKR1i4AXA2pd12U_cFUBaT15pW4sb9l" },
+      { title: "Eminem - Go To Sleep (UNCENSORED)", artist: "", src: "https://drive.google.com/uc?export=download&id=1Wd8qutJXJ-pU97NAm1vpkWbS_RoLo7Bm" },
+      { title: "David Banner - Like A Pimp ft. Lil' Flip", artist: "", src: "https://drive.google.com/uc?export=download&id=1fpEkY8QJ37ElCTp5knCZAUjGoYkjBo9s" },
+      { title: "Busta Rhymes - Break Your Neck (Dirty)", artist: "", src: "https://drive.google.com/uc?export=download&id=1DC7b5q83UuHD9-XYRzFJSh_pa9RLLsA_" },
+      { title: "B.o.B - Still In This Bitch ft. T.I.   Juicy J", artist: "", src: "https://drive.google.com/uc?export=download&id=1a9BE6e3V_V57_nj8JSYIRZIZd7p0we_d" },
+      { title: "Afu-Ra - Defeat (192  kbps)", artist: "", src: "https://drive.google.com/uc?export=download&id=1eWx_J-YU54vXNRG9ijXoGl7DXZZI_rWu" }
     ],
     electro: [
-      {
-        title: "Daft Punk - One More Time",
-        artist: "Daft Punk",
-        src: "https://drive.google.com/uc?export=download&id=5E6F7G8H9I0J1A2B3C4D",
-        cover: "https://drive.google.com/uc?export=view&id=5E6F7G8H9I0J1A2B3C4D"
-      },
-      {
-        title: "Martin Garrix - Animals",
-        artist: "Martin Garrix",
-        src: "https://drive.google.com/uc?export=download&id=6F7G8H9I0J1A2B3C4D5E",
-        cover: "https://drive.google.com/uc?export=view&id=6F7G8H9I0J1A2B3C4D5E"
-      }
+      { title: "Mandragora - Sem Você Sou Ninguém (Full Version)", artist: "", src: "https://drive.google.com/uc?export=download&id=1s5tgp_CxrphcGMBMagNplGX13RO6GGYH" },
+      { title: "Candy Kungs - Maurik Ft. Jasmine Thompson (Remix) ZAPATEO TRAVEL", artist: "", src: "https://drive.google.com/uc?export=download&id=1OkiUD33RgidX4SrzPC7kEiWEGoN_XXrm" },
+      { title: "Moska - House Religion (Official Lyric Video)", artist: "", src: "https://drive.google.com/uc?export=download&id=1F5bZA84dChFESPtsVHONvd6qOp2worXr" },
+      { title: "BORGORE & SIKDOPE - Unicorn Zombie Apocalypse (Original Mix)", artist: "", src: "https://drive.google.com/uc?export=download&id=1Ydng0BSsKDbn3LGeL6UihIT5flaSBUxe" },
+      { title: "Dimitri Vegas, MOGUAI & Like Mike - Mammoth (Original Mix)", artist: "", src: "https://drive.google.com/uc?export=download&id=1ppcT4hXCCY9iTPf1ItV-Fkr-A9WucS_e" },
+      { title: "Tiësto & KSHMR feat. Vassy - Secrets (Official Music Video)", artist: "", src: "https://drive.google.com/uc?export=download&id=1R3zTL5JRcBUrLlzr5tqLuX1JvwujMieS" },
+      { title: "Edward Maya & Vika Jigulina - Stereo Love (Official Music Video)", artist: "", src: "https://drive.google.com/uc?export=download&id=1aIewJOt8Sj1NOcy7Q-JC_5KzA-VFFG-h" },
+      { title: "DVBBS & Borgeous - TSUNAMI (Original Mix)", artist: "", src: "https://drive.google.com/uc?export=download&id=1PRf14OJk9xrVugInFgB7d9RASViKWB2X" },
+      { title: "BYOR & RITN - You Know (Official Music Video)", artist: "", src: "https://drive.google.com/uc?export=download&id=1Da7bYlu2VTZe5vsbXX8Boj7wr-Kj7n_0" },
+      { title: "LO MAS LEGAL III 3 TRES BY ALEX HARD", artist: "", src: "https://drive.google.com/uc?export=download&id=1QUar7bi786JpUvV27PLNd51mRAf4cHAg" },
+      { title: "Alex Hard - Cómo Sería Guaracha, Aleteo, Tribal", artist: "", src: "https://drive.google.com/uc?export=download&id=1qhTBZb56358tB4GzG1WfVZV1SY-Fejmg" },
+      { title: "Pickle - On The Drums (Official Music Video)", artist: "", src: "https://drive.google.com/uc?export=download&id=1dUT5XUJxLQesAIcIwDwkjmBiSIFw-ujs" },
+      { title: "Fumaratto - No Siendo Mas Ni Tampoco Menos (SET) Aleteo, Zapateo & Guaracha", artist: "", src: "https://drive.google.com/uc?export=download&id=1iYrYibeMjElQBHfDwf5hJIoma54sIWol" },
+      { title: "EN LA MIA (FOX INTONED EDITION ) SIMON CORREA MIXING (Guaracha, Aleteo y Zapateo)", artist: "", src: "https://drive.google.com/uc?export=download&id=1ZuFCrZly08bRru7XE6HoqAx_P8zaW477" },
+      { title: "CHAMPAGNE Harmoob", artist: "", src: "https://drive.google.com/uc?export=download&id=16oZwBFYwxy9Wahe8RzIlntJTgp_SMgfP" },
+      { title: "Supreme 2.0 - MegaMix By FOX INTONED Fumaratto Tribute", artist: "", src: "https://drive.google.com/uc?export=download&id=1vpd9O5S7zxoXjA07hSkhGU4SU4Lz_z0p" },
+      { title: "DJ DASTEN - Dale Color (SET - Vol. 1) Aleteo, Zapateo & Guaracha", artist: "", src: "https://drive.google.com/uc?export=download&id=1J1JMkcR6382FjYhC2KPQ_NrNippWlx3l" },
+      { title: "Hasta que salga la luna ( LiveSet) - Guaracha Podcast - Fumaratto", artist: "", src: "https://drive.google.com/uc?export=download&id=1ZiPWDoRwey3z3BTwjLeX8NWklJqpefhj" },
+      { title: "Bougenvilla - Wildfire (Official Music Video)", artist: "", src: "https://drive.google.com/uc?export=download&id=1X8KZu2nce2Nf0YqOSlFlc9zWLoFywBal" },
+      { title: "DJ DASTEN - Esquelefascina (Vol. 3) Aleteo, Zapateo & Guaracha", artist: "", src: "https://drive.google.com/uc?export=download&id=1Q6sUxk8FnAbdTdCZRcgREB1kCnpV2yNO" },
+      { title: "Amnesia Hpta Vol2 (JC Arcila Mix) Aleteo, Zapateo, Guaracha 2020", artist: "", src: "https://drive.google.com/uc?export=download&id=1axmzozpANPu6tTKQNlUPp4cQepnQVpfS" },
+      { title: "DJ DASTEN - Summer Edition Set (2020)", artist: "", src: "https://drive.google.com/uc?export=download&id=1MOOKDcqQ6RRU6A2_pAzL9JT-7jOWMNLQ" },
+      { title: "AUD-20191108-WA0003", artist: "", src: "https://drive.google.com/uc?export=download&id=1wM9rQ0NAEuGW4w28NZdu6jYxB2FXIWpH" },
+      { title: "tribal house colombia style 2017 zapateo", artist: "", src: "https://drive.google.com/uc?export=download&id=1RCKWhmHR8ndmUa0EmDyEvYahBjGwwys5" },
+      { title: "Set Noche De Tardeo", artist: "", src: "https://drive.google.com/uc?export=download&id=1rgBLK-DU1enVcCOFJCsQ07m8WC990onS" },
+      { title: "Zapateo de enciso (radio edit)", artist: "", src: "https://drive.google.com/uc?export=download&id=1D3lp-rXeujsGRrDtq08c4H74ByFLawXG" },
+      { title: "Tostados colombia mix 2017 (zapateo - guaracha - tribal house )", artist: "", src: "https://drive.google.com/uc?export=download&id=13LsY0fzjOj672AAs7mwIv0rvU6kmQAcc" },
+      { title: "Fumarato Ferroso Manizales 2017", artist: "", src: "https://drive.google.com/uc?export=download&id=1cxFGvI5n8RCoNYV9P6VSjyS2o_1oi4H-" },
+      { title: "Abril 2017   SET  7   Andro DJ   ZAPATEO   ALETEO   GUARACHA   TRIBAL HOUSE   COLOMBIAN Style", artist: "", src: "https://drive.google.com/uc?export=download&id=1zB53Kfee3WDTDMaT5F2ffSOrhUzeQQ0Y" },
+      { title: "Black Coast - TRNDSTTR (Lucian Remix)", artist: "", src: "https://drive.google.com/uc?export=download&id=1EBCA2I08uYof6Y5l4FGQp4gNbFXE7odd" },
+      { title: "G-Eazy & Bebe Rexha - Me, Myself & I (No Sleep Remix)", artist: "", src: "https://drive.google.com/uc?export=download&id=1RfmOqEqwmVogpcuxRazUlSS5is7Tzc4j" },
+      { title: "zapateo-2", artist: "", src: "https://drive.google.com/uc?export=download&id=1oASIdTxhoBakaSWFBWhLG2MVws0V6Qcj" },
+      { title: "zapateo-1", artist: "", src: "https://drive.google.com/uc?export=download&id=1DATQwsq06cVVt8rTODCWhMB2U_8ubs1l" },
+      { title: "this-is-colombia-zapateo-2", artist: "", src: "https://drive.google.com/uc?export=download&id=1YCVA3ue3GYURHIerQsrKxvKM6ntHRgNN" },
+      { title: "solo-zapateo-vol2-dj-juan-escobar-dj-sisiño-live-set", artist: "", src: "https://drive.google.com/uc?export=download&id=1Ai9OO3Wihvbna8QSxgvK62DGwq5TFfG-" },
+      { title: "Musica Electronica Nueva", artist: "", src: "https://drive.google.com/uc?export=download&id=1Akiyrs5u4KBXoW5K6j0tr4GCvUHUyhRw" },
+      { title: "Groove Man - Da Moon", artist: "", src: "https://drive.google.com/uc?export=download&id=1a_YJnuDMjqeiOPmjwqgddrh3KbbWwlJu" },
+      { title: "Carranga (Zapateo) 2017", artist: "", src: "https://drive.google.com/uc?export=download&id=1SVxf9B_KBMpsNJpWPAGyFAUSL7TofCKD" }
+    ],
+    latino: [
+      { title: "Jamby El Favo - 7_Y Pico 🕖 (Video Oficial)", artist: "", src: "https://drive.google.com/uc?export=download&id=1jeZLrQ5Q83bKCEZUM-oUsc3eaql2lUoy" },
+      { title: "003 Recuerda ZAYAN MAXIMA", artist: "", src: "https://drive.google.com/uc?export=download&id=1uPcf0jIXNeZyUBnn91l168EJf53qY19-" },
+      { title: "015 No se -ZAYAN MAXIMA", artist: "", src: "https://drive.google.com/uc?export=download&id=1HhQEsDV7J6okrp3Yh4nOcaMeSaH_nzXt" },
+      { title: "050 La Romana FT El Alfa   Bad bunny   X 100PRE", artist: "", src: "https://drive.google.com/uc?export=download&id=1byI9IiVkVfbtTMNWoxMtKEcBtQIRdOMP" },
+      { title: "017. Reggaeton--J Balvin", artist: "", src: "https://drive.google.com/uc?export=download&id=1iWcQZ_eOsRXg98BugSsCetnHh9QyLtyx" }
     ]
   };
+
   res.status(200).json(playlists);
 }
-
