@@ -130,11 +130,10 @@ function roundRect(ctx, x, y, width, height, radius) {
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
+    // === VARIABLES Y ELEMENTOS DOM ===
     let playlists = {};
-    // Helper to enable/disable player controls and category buttons
-    function setPlayerControlsEnabled(enabled) {
-        const controls = document.querySelectorAll('.player-control, .category-btn');
-        controls.forEach(ctrl => ctrl.disabled = !enabled);
+    const categories = ['urbano', 'latino', 'electro'];
+    let currentCategoryIndex = 0;
     }
     // Disable controls initially
     setPlayerControlsEnabled(false);
@@ -151,14 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             setPlayerControlsEnabled(true);
-            changeCategory('urbano'); // Load default category only after playlists are loaded
-        } catch (error) {
-            console.error('Error fetching playlists:', error);
-        }
-    }
-
-    const categories = ['urbano', 'latino', 'electro']; // Define categories array
-    let currentCategoryIndex = 0; // Track current category index
     let currentPlaylist = categories[currentCategoryIndex];
     let currentSongIndex = 0;
     let isPlaying = false;
@@ -637,5 +628,4 @@ function animateTitleColors(hue) {
         controls.forEach(ctrl => ctrl.disabled = !enabled);
     }
     drawVisualizer();
-} // <-- cierre de DOMContentLoaded
-});
+}

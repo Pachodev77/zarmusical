@@ -1,6 +1,3 @@
-const fs = require('fs');
-const path = require('path');
-
 export default function handler(req, res) {
   // Playlist única con todos los enlaces del usuario
   const playlists = {

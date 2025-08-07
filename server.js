@@ -1,4 +1,6 @@
-const express = require('express');
+// Este archivo server.js está deshabilitado. No usar. El backend real es /api/songs.js (Next.js/Vercel).
+// Para producción y desarrollo, usa solo Vercel/Next.js.
+// No ejecutar node server.js ni depender de archivos locales.
 const fs = require('fs');
 const path = require('path');
 
