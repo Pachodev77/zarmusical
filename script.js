@@ -134,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let playlists = {};
     const categories = ['urbano', 'latino', 'electro'];
     let currentCategoryIndex = 0;
-    }
     // Disable controls initially
     setPlayerControlsEnabled(false);
 
