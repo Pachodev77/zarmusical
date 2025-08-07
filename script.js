@@ -378,19 +378,108 @@ document.addEventListener('DOMContentLoaded', () => {
     let prevHeights = [];
     let visualizerHue = 0;
     function drawVisualizer() {
-        const avg = sum / (binEnd - binStart);
-        let barHeight = (avg / 255) * maxBarHeight;
-        barHeight = barHeight * (1 - smoothFactor) + window.prevVisualizerHeights[i] * smoothFactor;
-        window.prevVisualizerHeights[i] = barHeight;
-        const grad = ctx.createLinearGradient(
-            i * barWidth, visualizer.height, i * barWidth, visualizer.height - barHeight
-        );
-        requestAnimationFrame(drawVisualizer);
-        visualizer.width = visualizer.offsetWidth;
-        visualizer.height = visualizer.offsetHeight;
-        const ctx = visualizer.getContext('2d');
-        ctx.clearRect(0, 0, visualizer.width, visualizer.height);
-        analyser.fftSize = 128;
+    // --- Visualizer principal único: cálculo correcto de sum y avg por barra ---
+    requestAnimationFrame(drawVisualizer);
+    visualizer.width = visualizer.offsetWidth;
+    visualizer.height = visualizer.offsetHeight;
+    const ctx = visualizer.getContext('2d');
+    ctx.clearRect(0, 0, visualizer.width, visualizer.height);
+    analyser.fftSize = 128;
+    let bufferLength = analyser.frequencyBinCount;
+    let dataArray = new Uint8Array(bufferLength);
+    analyser.getByteFrequencyData(dataArray);
+    const barCount = bufferLength;
+    const barWidth = visualizer.width / barCount;
+    let x = 0;
+
+    // Inicializar suavizado
+    if (prevHeights.length !== barCount) prevHeights = Array(barCount).fill(0);
+
+    // Ganancia para barras más altas
+    const GAIN = 1.6;
+    const EASING = 0.30; // Suavizado
+
+    // --- Distribución logarítmica para frecuencias parejas ---
+    // --- Visualizador con bandas y compensación de sensibilidad ---
+    const minBand = 2; // bandas mínimas para evitar saturación en graves
+    const maxBand = 12; // bandas máximas para evitar saturación en agudos
+
+    for (let i = 0; i < barCount; i++) {
+        // Rango de frecuencias para cada barra (bandas más anchas en graves, más finas en agudos)
+        let startIdx = Math.floor((i / barCount) ** 1.7 * (barCount - minBand));
+        let endIdx = Math.floor(((i + 1) / barCount) ** 1.7 * (barCount - minBand)) + minBand;
+        if (endIdx <= startIdx) endIdx = startIdx + 1;
+        let sum = 0;
+        for (let j = startIdx; j < endIdx; j++) {
+            sum += dataArray[j];
+        }
+        let avg = sum / (endIdx - startIdx);
+
+        // Compresión y límite fuerte en graves para que nunca se saturen visualmente
+        let compensation = 0.7 + 1.3 * (i / (barCount - 1)); // 0.7x en graves, hasta 2x en agudos
+        let target = avg * GAIN * compensation;
+        // Aplica compresión exponencial y límite duro a las primeras barras (primer 25%)
+        if (i < barCount * 0.25) {
+            target = Math.pow(target, 0.4) * 13; // compresión fuerte
+        }
+        let eased = prevHeights[i] + (target - prevHeights[i]) * EASING;
+        prevHeights[i] = eased;
+        let barHeight = eased;
+        // Límite máximo visual para las primeras barras
+        if (i < barCount * 0.25) {
+            barHeight = Math.min(barHeight, visualizer.height * 0.35);
+        }
+
+        // Rebote dinámico (más movimiento en graves)
+        if (i < barCount * 0.15) {
+            barHeight += Math.abs(Math.sin(Date.now()/140 + i)) * 18;
+        }
+
+        // Gradiente dinámico
+        let grad = ctx.createLinearGradient(x, visualizer.height, x, visualizer.height - barHeight);
+        let hue = (i*360/barCount+Date.now()/25)%360;
+        grad.addColorStop(0, `hsl(${hue},100%,60%)`);
+        grad.addColorStop(1, `hsl(${(hue+60)%360},100%,40%)`);
+        ctx.fillStyle = grad;
+
+        // Sombra para profundidad
+        ctx.shadowColor = `hsl(${(hue+30)%360},100%,40%)`;
+        ctx.shadowBlur = 12;
+
+        // Dibuja barra
+        ctx.fillRect(x, visualizer.height - barHeight, barWidth - 1, barHeight);
+        ctx.shadowBlur = 0;
+        x += barWidth;
+    }
+
+    // Update CSS variables for dynamic coloring
+    let hue = (Date.now() / 25) % 360;
+    const primaryColor = `hsl(${hue}, 100%, 50%)`;
+    const shadowColor = `hsla(${hue}, 100%, 50%, 0.5)`;
+    const darkBackgroundColor = `hsl(${hue}, 30%, 10%)`;
+    const lightBackgroundColor = `hsl(${hue}, 20%, 15%)`;
+    const textColor = `hsl(${hue}, 10%, 90%)`;
+
+    document.documentElement.style.setProperty('--primary-color', primaryColor);
+    document.documentElement.style.setProperty('--shadow-color', shadowColor);
+    document.documentElement.style.setProperty('--background-dark', darkBackgroundColor);
+    document.documentElement.style.setProperty('--background-light', lightBackgroundColor);
+    document.documentElement.style.setProperty('--text-color', textColor);
+
+    // --- Animación de colores del título principal ---
+    animateTitleColors(hue);
+}
+
+// --- Animación de colores del título principal ---
+function animateTitleColors(hue) {
+    const title = document.getElementById('sonido-callejero-title');
+    if (!title) return;
+    const spans = title.querySelectorAll('span');
+    const total = spans.length;
+    for (let i = 0; i < total; i++) {
+        const letterHue = (hue + i * (360 / total)) % 360;
+        spans[i].style.color = `hsl(${letterHue}, 100%, 60%)`;
+        spans[i].style.textShadow = `0 0 12px #fff, 0 0 18px hsl(${letterHue},100%,65%), 0 0 6px #fff`;
         let bufferLength = analyser.frequencyBinCount;
         let dataArray = new Uint8Array(bufferLength);
         analyser.getByteFrequencyData(dataArray);
