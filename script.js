@@ -131,6 +131,11 @@ function roundRect(ctx, x, y, width, height, radius) {
 
 document.addEventListener('DOMContentLoaded', () => {
     let playlists = {};
+    // Helper to enable/disable player controls and category buttons
+    function setPlayerControlsEnabled(enabled) {
+        const controls = document.querySelectorAll('.player-control, .category-btn');
+        controls.forEach(ctrl => ctrl.disabled = !enabled);
+    }
     // Disable controls initially
     setPlayerControlsEnabled(false);
 
