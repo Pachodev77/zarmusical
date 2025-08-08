@@ -1,24 +1,3 @@
-// Dibuja un rectángulo redondeado en el canvas (para barras del visualizador)
-function roundRect(ctx, x, y, width, height, radius) {
-    if (radius > 0) {
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + width - radius, y);
-        ctx.arcTo(x + width, y, x + width, y + radius, radius);
-        ctx.lineTo(x + width, y + height - radius);
-        ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-        ctx.lineTo(x + radius, y + height);
-        ctx.arcTo(x, y + height, x, y + height - radius, radius);
-        ctx.lineTo(x, y + radius);
-        ctx.arcTo(x, y, x + radius, y, radius);
-        ctx.closePath();
-    } else {
-        ctx.beginPath();
-        ctx.rect(x, y, width, height);
-        ctx.closePath();
-    }
-}
-
 // Disco lights background animation
 (function() {
     const colors = [
@@ -130,25 +109,20 @@ function roundRect(ctx, x, y, width, height, radius) {
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
-    // === VARIABLES Y ELEMENTOS DOM ===
     let playlists = {};
-    const categories = ['urbano', 'latino', 'electro'];
-    let currentCategoryIndex = 0;
-    // Disable controls initially
-    setPlayerControlsEnabled(false);
 
     async function fetchPlaylists() {
         try {
-            // Disable controls until playlists are loaded
-            setPlayerControlsEnabled(false);
             const response = await fetch('/api/songs');
             playlists = await response.json();
-            // Validate playlists structure
-            if (!playlists || !playlists.urbano || !playlists.latino || !playlists.electro) {
-                console.error('API playlists structure invalid:', playlists);
-                return;
-            }
-            setPlayerControlsEnabled(true);
+            changeCategory('urbano'); // Load default category
+        } catch (error) {
+            console.error('Error fetching playlists:', error);
+        }
+    }
+
+    const categories = ['urbano', 'latino', 'electro']; // Define categories array
+    let currentCategoryIndex = 0; // Track current category index
     let currentPlaylist = categories[currentCategoryIndex];
     let currentSongIndex = 0;
     let isPlaying = false;
@@ -179,7 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
     source.connect(analyser);
     analyser.connect(audioContext.destination);
     analyser.fftSize = 256;
-    // bufferLength y dataArray se declaran localmente en drawVisualizer, no aquí.
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
 
     const playPauseBtn = document.getElementById('play-pause-btn');
     const playIcon = document.getElementById('play-icon');
@@ -198,24 +173,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const playlistElement = document.getElementById('playlist');
     const visualizer = document.getElementById('visualizer');
     const visualizerCtx = visualizer.getContext('2d');
-    
-    const sonidoCallejeroTitle = document.getElementById('sonido-callejero-title');
-    const titleSpans = sonidoCallejeroTitle ? sonidoCallejeroTitle.querySelectorAll('span') : [];
-
-    // Selecciona los botones de género y asigna listeners
     const categoryBtns = document.querySelectorAll('.category-btn');
-    categoryBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            changeCategory(btn.dataset.category);
-        });
-    });
+    const zarMusicalTitle = document.getElementById('zar-musical-title');
+    const titleSpans = zarMusicalTitle ? zarMusicalTitle.querySelectorAll('span') : [];
 
     function changeCategory(category, keepShuffle = false) {
-        // Defensive: Ensure playlists and indices are valid
-        if (!playlists || !playlists[category]) {
-            console.error('Playlist not loaded or invalid:', category, playlists);
-            return;
-        }
         currentPlaylist = category;
         currentCategoryIndex = categories.indexOf(category); // Update category index
         categoryBtns.forEach(btn => {
@@ -233,15 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadSong(songIndex) {
-        // Defensive: Ensure playlists and indices are valid
-        if (!playlists || !playlists[currentPlaylist]) {
-            console.error('Playlist not loaded or invalid:', currentPlaylist, playlists);
-            return;
-        }
-        if (!playlists[currentPlaylist][songIndex]) {
-            console.error('Song index out of range:', songIndex, playlists[currentPlaylist]);
-            return;
-        }
         currentSongIndex = songIndex;
         const song = playlists[currentPlaylist][currentSongIndex];
         // Efecto marquee para títulos largos
@@ -370,198 +323,36 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
     }
 
-    let prevHeights = [];
-    let visualizerHue = 0;
-    function drawVisualizer() {
-    // --- Visualizer principal único: cálculo correcto de sum y avg por barra ---
-    requestAnimationFrame(drawVisualizer);
-    visualizer.width = visualizer.offsetWidth;
-    visualizer.height = visualizer.offsetHeight;
-    const ctx = visualizer.getContext('2d');
-    ctx.clearRect(0, 0, visualizer.width, visualizer.height);
-    analyser.fftSize = 128;
-    let bufferLength = analyser.frequencyBinCount;
-    let dataArray = new Uint8Array(bufferLength);
-    analyser.getByteFrequencyData(dataArray);
-    const barCount = bufferLength;
-    const barWidth = visualizer.width / barCount;
-    let x = 0;
+    let hue = 0;
+    let titleHueOffset = 0;
 
-    // Inicializar suavizado
-    if (prevHeights.length !== barCount) prevHeights = Array(barCount).fill(0);
+    function animateTitleColors() {
+        if (titleSpans.length === 0) return;
 
-    // Ganancia para barras más altas
-    const GAIN = 1.6;
-    const EASING = 0.30; // Suavizado
+        titleHueOffset = (titleHueOffset + 5) % 360; // Faster color change for title
 
-    // --- Distribución logarítmica para frecuencias parejas ---
-    // --- Visualizador con bandas y compensación de sensibilidad ---
-    const minBand = 2; // bandas mínimas para evitar saturación en graves
-    const maxBand = 12; // bandas máximas para evitar saturación en agudos
-
-    for (let i = 0; i < barCount; i++) {
-        // Rango de frecuencias para cada barra (bandas más anchas en graves, más finas en agudos)
-        let startIdx = Math.floor((i / barCount) ** 1.7 * (barCount - minBand));
-        let endIdx = Math.floor(((i + 1) / barCount) ** 1.7 * (barCount - minBand)) + minBand;
-        if (endIdx <= startIdx) endIdx = startIdx + 1;
-        let sum = 0;
-        for (let j = startIdx; j < endIdx; j++) {
-            sum += dataArray[j];
-        }
-        let avg = sum / (endIdx - startIdx);
-
-        // Compresión y límite fuerte en graves para que nunca se saturen visualmente
-        let compensation = 0.7 + 1.3 * (i / (barCount - 1)); // 0.7x en graves, hasta 2x en agudos
-        let target = avg * GAIN * compensation;
-        // Aplica compresión exponencial y límite duro a las primeras barras (primer 25%)
-        if (i < barCount * 0.25) {
-            target = Math.pow(target, 0.4) * 13; // compresión fuerte
-        }
-        let eased = prevHeights[i] + (target - prevHeights[i]) * EASING;
-        prevHeights[i] = eased;
-        let barHeight = eased;
-        // Límite máximo visual para las primeras barras
-        if (i < barCount * 0.25) {
-            barHeight = Math.min(barHeight, visualizer.height * 0.35);
-        }
-
-        // Rebote dinámico (más movimiento en graves)
-        if (i < barCount * 0.15) {
-            barHeight += Math.abs(Math.sin(Date.now()/140 + i)) * 18;
-        }
-
-        // Gradiente dinámico
-        let grad = ctx.createLinearGradient(x, visualizer.height, x, visualizer.height - barHeight);
-        let hue = (i*360/barCount+Date.now()/25)%360;
-        grad.addColorStop(0, `hsl(${hue},100%,60%)`);
-        grad.addColorStop(1, `hsl(${(hue+60)%360},100%,40%)`);
-        ctx.fillStyle = grad;
-
-        // Sombra para profundidad
-        ctx.shadowColor = `hsl(${(hue+30)%360},100%,40%)`;
-        ctx.shadowBlur = 12;
-
-        // Dibuja barra
-        ctx.fillRect(x, visualizer.height - barHeight, barWidth - 1, barHeight);
-        ctx.shadowBlur = 0;
-        x += barWidth;
+        titleSpans.forEach((span, index) => {
+            const letterHue = (titleHueOffset + index * 30) % 360; // Different color for each letter
+            span.style.color = `hsl(${letterHue}, 100%, 50%)`;
+            span.style.textShadow = `0 0 10px hsl(${letterHue}, 100%, 50%)`;
+        });
     }
 
-    // Update CSS variables for dynamic coloring
-    let hue = (Date.now() / 25) % 360;
-    const primaryColor = `hsl(${hue}, 100%, 50%)`;
-    const shadowColor = `hsla(${hue}, 100%, 50%, 0.5)`;
-    const darkBackgroundColor = `hsl(${hue}, 30%, 10%)`;
-    const lightBackgroundColor = `hsl(${hue}, 20%, 15%)`;
-    const textColor = `hsl(${hue}, 10%, 90%)`;
+    function drawVisualizer() {
+        requestAnimationFrame(drawVisualizer);
 
-    document.documentElement.style.setProperty('--primary-color', primaryColor);
-    document.documentElement.style.setProperty('--shadow-color', shadowColor);
-    document.documentElement.style.setProperty('--background-dark', darkBackgroundColor);
-    document.documentElement.style.setProperty('--background-light', lightBackgroundColor);
-    document.documentElement.style.setProperty('--text-color', textColor);
+        // Set canvas dimensions to match its displayed size
+        visualizer.width = visualizer.offsetWidth;
+        visualizer.height = visualizer.offsetHeight;
 
-    // --- Animación de colores del título principal ---
-    animateTitleColors(hue);
-}
-
-// --- Animación de colores del título principal ---
-function animateTitleColors(hue) {
-    const title = document.getElementById('sonido-callejero-title');
-    if (!title) return;
-    const spans = title.querySelectorAll('span');
-    const total = spans.length;
-    for (let i = 0; i < total; i++) {
-        const letterHue = (hue + i * (360 / total)) % 360;
-        spans[i].style.color = `hsl(${letterHue}, 100%, 60%)`;
-        spans[i].style.textShadow = `0 0 12px #fff, 0 0 18px hsl(${letterHue},100%,65%), 0 0 6px #fff`;
-        let bufferLength = analyser.frequencyBinCount;
-        let dataArray = new Uint8Array(bufferLength);
-        analyser.getByteFrequencyData(dataArray);
-        const barCount = bufferLength;
-        const barWidth = visualizer.width / barCount;
-        let x = 0;
-
-        // Inicializar suavizado
-        if (prevHeights.length !== barCount) prevHeights = Array(barCount).fill(0);
-
-        // Ganancia para barras más altas
-        const GAIN = 1.6;
-        const EASING = 0.30; // Suavizado
-
-        // --- Distribución logarítmica para frecuencias parejas ---
-        // --- Visualizador con bandas y compensación de sensibilidad ---
-        const minBand = 2; // bandas mínimas para evitar saturación en graves
-        const maxBand = 12; // bandas máximas para evitar saturación en agudos
-
-        // --- Animación de colores del título principal ---
-        function animateTitleColors(hue) {
-            const title = document.getElementById('sonido-callejero-title');
-            if (!title) return;
-            const spans = title.querySelectorAll('span');
-            const total = spans.length;
-            for (let i = 0; i < total; i++) {
-                const letterHue = (hue + i * (360 / total)) % 360;
-                spans[i].style.color = `hsl(${letterHue}, 100%, 60%)`;
-                spans[i].style.textShadow = `0 0 12px #fff, 0 0 18px hsl(${letterHue},100%,65%), 0 0 6px #fff`;
-            }
-        }
-
-        for (let i = 0; i < barCount; i++) {
-            // Rango de frecuencias para cada barra (bandas más anchas en graves, más finas en agudos)
-            let startIdx = Math.floor((i / barCount) ** 1.7 * (barCount - minBand));
-            let endIdx = Math.floor(((i + 1) / barCount) ** 1.7 * (barCount - minBand)) + minBand;
-            if (endIdx <= startIdx) endIdx = startIdx + 1;
-            let sum = 0;
-            for (let j = startIdx; j < endIdx; j++) {
-                sum += dataArray[j];
-            }
-            let avg = sum / (endIdx - startIdx);
-
-            // Compresión y límite fuerte en graves para que nunca se saturen visualmente
-            let compensation = 0.7 + 1.3 * (i / (barCount - 1)); // 0.7x en graves, hasta 2x en agudos
-            let target = avg * GAIN * compensation;
-            // Aplica compresión exponencial y límite duro a las primeras barras (primer 25%)
-            if (i < barCount * 0.25) {
-                target = Math.pow(target, 0.4) * 13; // compresión fuerte
-            }
-            let eased = prevHeights[i] + (target - prevHeights[i]) * EASING;
-            prevHeights[i] = eased;
-            let barHeight = eased;
-            // Límite máximo visual para las primeras barras
-            if (i < barCount * 0.25) {
-                barHeight = Math.min(barHeight, visualizer.height * 0.35);
-            }
-
-            // Rebote dinámico (más movimiento en graves)
-            if (i < barCount * 0.15) {
-                barHeight += Math.abs(Math.sin(Date.now()/140 + i)) * 18;
-            }
-
-            // Gradiente dinámico
-            let grad = ctx.createLinearGradient(x, visualizer.height, x, visualizer.height - barHeight);
-            let hue = (i*360/barCount+Date.now()/25)%360;
-            grad.addColorStop(0, `hsl(${hue},100%,60%)`);
-            grad.addColorStop(1, `hsl(${(hue+60)%360},100%,40%)`);
-            ctx.fillStyle = grad;
-
-            // Sombra para profundidad
-            ctx.shadowColor = `hsl(${(hue+30)%360},100%,40%)`;
-            ctx.shadowBlur = 12;
-
-            // Dibuja barra
-            ctx.fillRect(x, visualizer.height - barHeight, barWidth - 1, barHeight);
-            ctx.shadowBlur = 0;
-            x += barWidth;
-        }
+        hue = (hue + 0.5) % 360;
 
         // Update CSS variables for dynamic coloring
-        let hue = (Date.now() / 25) % 360;
         const primaryColor = `hsl(${hue}, 100%, 50%)`;
         const shadowColor = `hsla(${hue}, 100%, 50%, 0.5)`;
         const darkBackgroundColor = `hsl(${hue}, 30%, 10%)`;
-        const lightBackgroundColor = `hsl(${hue}, 20%, 15%)`;
-        const textColor = `hsl(${hue}, 10%, 90%)`;
+        const lightBackgroundColor = `hsl(${hue}, 20%, 15%)`; // Slightly lighter for container
+        const textColor = `hsl(${hue}, 10%, 90%)`; // Adjust text color for contrast
 
         document.documentElement.style.setProperty('--primary-color', primaryColor);
         document.documentElement.style.setProperty('--shadow-color', shadowColor);
@@ -570,7 +361,30 @@ function animateTitleColors(hue) {
         document.documentElement.style.setProperty('--text-color', textColor);
 
         // Animate title colors
-        animateTitleColors(hue);
+        animateTitleColors();
+
+        analyser.getByteFrequencyData(dataArray);
+        
+        // Añade un sutil efecto de desvanecimiento para dejar estelas
+        visualizerCtx.fillStyle = 'rgba(30, 30, 30, 0.1)';
+        visualizerCtx.fillRect(0, 0, visualizer.width, visualizer.height);
+
+        const barCount = bufferLength; // Use bufferLength for the number of bars
+        const barWidth = visualizer.width / barCount; // Calculate bar width to fill the container
+        let x = 0;
+
+        for (let i = 0; i < barCount; i++) {
+            barHeight = dataArray[i] * 0.9; // Escala las barras para un look más limpio
+            
+            if (barHeight > 0) {
+                // Calcula el color de cada barra para crear un efecto arcoíris
+                const barHue = (hue + i * 2) % 360;
+                visualizerCtx.fillStyle = `hsl(${barHue}, 100%, 50%)`;
+                visualizerCtx.fillRect(x, visualizer.height - barHeight, barWidth - 1, barHeight); // Subtract 1 for a small gap
+            }
+            
+            x += barWidth;
+        }
     }
 
     playPauseBtn.addEventListener('click', playPauseToggle);
@@ -620,14 +434,5 @@ function animateTitleColors(hue) {
 
     // Init
     fetchPlaylists();
-
-    // Helper to enable/disable player controls and category buttons
-    function setPlayerControlsEnabled(enabled) {
-        const controls = document.querySelectorAll('.player-control, .category-btn');
-        controls.forEach(ctrl => ctrl.disabled = !enabled);
-    }
     drawVisualizer();
-}
-
-
-
+});
