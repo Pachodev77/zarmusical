@@ -628,3 +628,4 @@ function animateTitleColors(hue) {
     }
     drawVisualizer();
 }
+
