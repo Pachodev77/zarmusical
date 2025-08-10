@@ -6,10 +6,14 @@ const { getCloudinaryAudioUrls } = require('./cloudinary_audio');
 const categories = ['urbano', 'latino', 'rock', 'pop', 'reggaeton', 'trap', 'romanticas', 'rancheras', 'vallenato', 'salsa', 'bachata', 'merengue', 'electronica', 'crossover'];
 
 export default async function handler(req, res) {
-  // Obtener canciones de Cloudinary dinámicamente para cada categoría
-  const playlists = {};
-  for (const cat of categories) {
-    playlists[cat] = await getCloudinaryAudioUrls(cat);
+  try {
+    const playlists = {};
+    for (const cat of categories) {
+      playlists[cat] = await getCloudinaryAudioUrls(cat);
+    }
+    res.status(200).json(playlists);
+  } catch (err) {
+    console.error('Error in /api/songs:', err);
+    res.status(500).json({ error: 'Internal Server Error', detail: err.message, stack: err.stack });
   }
-  res.status(200).json(playlists);
 }
