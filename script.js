@@ -196,18 +196,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadSong(songIndex) {
-        currentSongIndex = songIndex;
-        const song = playlists[currentPlaylist][currentSongIndex];
-        // Efecto marquee para títulos largos
-        document.getElementById('song-title').innerHTML = `<span class="song-title-marquee">${song.title}</span>`;
-        songArtist.textContent = song.artist;
-        audio.src = song.src; // Set audio source here
-        updatePlaylistUI();
-    }
 
-    function updatePlaylistUI() {
-        playlistElement.innerHTML = '';
-        playlists[currentPlaylist].forEach((song, index) => {
+        source.connect(analyser);
+        analyser.connect(audioContext.destination);
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
             const li = document.createElement('li');
             li.textContent = song.title;
             if (index === currentSongIndex) {
