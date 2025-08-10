@@ -111,6 +111,15 @@
 document.addEventListener('DOMContentLoaded', () => {
     let playlists = {};
 
+    // Definir categorías al inicio
+    const categories = ['urbano', 'latino', 'electro'];
+
+    // Inicializar playlists con valores por defecto
+    playlists = categories.reduce((acc, cat) => ({
+        ...acc,
+        [cat]: []
+    }), {});
+
     async function fetchPlaylists() {
         try {
             const response = await fetch('/api/songs');
@@ -140,14 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
             throw error; // Propagar el error para que el llamante lo maneje
         }
     }
-
-    // Inicializar playlists con valores por defecto
-    playlists = categories.reduce((acc, cat) => ({
-        ...acc,
-        [cat]: []
-    }), {});
-
-    const categories = ['urbano', 'latino', 'electro']; // Define categories array
     let currentCategoryIndex = 0; // Track current category index
     let currentPlaylist = categories[currentCategoryIndex];
     let currentSongIndex = 0;
