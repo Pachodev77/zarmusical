@@ -29,4 +29,4 @@ async function getCloudinaryAudioUrls(folder) {
   }));
 }
 
-module.exports = { getCloudinaryAudioUrls };
+export { getCloudinaryAudioUrls };
