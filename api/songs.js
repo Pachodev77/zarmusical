@@ -13,10 +13,3 @@ export default async function handler(req, res) {
   }
   res.status(200).json(playlists);
 }
-      { title: "Dimitri Vegas, MOGUAI & Like Mike - Mammoth (Original Mix)", artist: "Desconocido", src: "https://res.cloudinary.com/dxrbvgr1o/video/upload/v1754616379/Dimitri_Vegas_MOGUAI_Like_Mike_-_Mammoth_Original_Mix_ziitob.mp3", cover: "https://via.placeholder.com/150" }
-    ]
-  };
-
-  res.status(200).json(playlists);
-}
-
