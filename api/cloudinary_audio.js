@@ -1,7 +1,8 @@
 // Utilidad para obtener URLs de audios desde Cloudinary
 // Uso: importar y llamar getCloudinaryAudioUrls()
 
-const cloudinary = require('cloudinary').v2;
+import cloudinaryPkg from 'cloudinary';
+const cloudinary = cloudinaryPkg.v2;
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
