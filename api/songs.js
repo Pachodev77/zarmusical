@@ -9,7 +9,13 @@ export default async function handler(req, res) {
   try {
     const playlists = {};
     for (const cat of categories) {
-      playlists[cat] = await getCloudinaryAudioUrls(cat);
+      try {
+        const result = await getCloudinaryAudioUrls(cat);
+        playlists[cat] = Array.isArray(result) ? result : [];
+      } catch (e) {
+        console.error(`Error obteniendo ${cat}:`, e);
+        playlists[cat] = [];
+      }
     }
     res.status(200).json(playlists);
   } catch (err) {
