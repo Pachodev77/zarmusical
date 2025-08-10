@@ -1,6 +1,8 @@
 // Proxy endpoint para servir archivos de audio de Cloudinary con CORS
 // Uso: /api/proxy_audio?url=https://res.cloudinary.com/...
 
+import { pipeline } from 'stream';
+
 export default async function handler(req, res) {
   const url = req.query.url;
   if (!url) {
@@ -8,18 +10,35 @@ export default async function handler(req, res) {
     return;
   }
   try {
-    // Fetch el archivo remoto y retransmitirlo
     const response = await fetch(url);
     if (!response.ok) {
-      res.status(502).json({ error: 'Error fetching remote file' });
+      console.error('Proxy fetch error:', response.status, response.statusText);
+      res.status(502).json({ error: 'Error fetching remote file', status: response.status, statusText: response.statusText });
       return;
     }
-    // Pasar headers apropiados
+    // Headers
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Content-Type', response.headers.get('content-type'));
-    // Stream the response
-    response.body.pipe(res);
+    const contentType = response.headers.get('content-type') || 'audio/mpeg';
+    res.setHeader('Content-Type', contentType);
+    const contentLength = response.headers.get('content-length');
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
+    }
+    // Streaming robusto
+    if (response.body && pipeline) {
+      pipeline(response.body, res, (err) => {
+        if (err) {
+          console.error('Streaming pipeline error:', err);
+        }
+      });
+    } else if (response.body) {
+      response.body.pipe(res);
+    } else {
+      res.status(500).json({ error: 'No response body from Cloudinary' });
+    }
   } catch (err) {
+    console.error('Proxy error:', err);
     res.status(500).json({ error: 'Proxy error', detail: err.message });
   }
 }
+
