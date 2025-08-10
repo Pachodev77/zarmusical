@@ -115,6 +115,16 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/api/songs');
             playlists = await response.json();
+            // Reescribir URLs de Cloudinary para pasar por el proxy
+            Object.keys(playlists).forEach(cat => {
+                playlists[cat] = playlists[cat].map(song => {
+                    if (song.src && song.src.includes('res.cloudinary.com')) {
+                        // Encodifica la URL para evitar problemas con caracteres especiales
+                        song.src = `/api/proxy_audio?url=${encodeURIComponent(song.src)}`;
+                    }
+                    return song;
+                });
+            });
             changeCategory('urbano'); // Load default category
         } catch (error) {
             console.error('Error fetching playlists:', error);
