@@ -20,9 +20,11 @@ async function getCloudinaryAudioUrls(folder) {
     .sort_by('public_id','desc')
     .max_results(50)
     .execute();
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   return result.resources.map(file => ({
     title: file.public_id.split('/').pop().replace(/_/g, ' '),
     src: file.secure_url,
+    manual_url: `https://res.cloudinary.com/${cloudName}/video/upload/${file.public_id}.mp3`,
     cover: file.thumbnail_url || 'https://via.placeholder.com/150',
   }));
 }
