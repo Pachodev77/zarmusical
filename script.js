@@ -206,12 +206,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadSong(songIndex) {
+        // Aquí va la lógica para cargar la canción seleccionada
+        const song = playlists[currentPlaylist][songIndex];
+        if (!song) return;
+        audio.src = song.src;
+        songTitle.textContent = song.title || '';
+        songArtist.textContent = song.artist || '';
+        albumCover.src = song.cover || '';
+        currentSongIndex = songIndex;
+        // Visual feedback en la playlist
+        Array.from(playlistElement.children).forEach((li, idx) => {
+            li.classList.toggle('active', idx === songIndex);
+        });
+    }
 
-        source.connect(analyser);
-        analyser.connect(audioContext.destination);
-        analyser.fftSize = 256;
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
+    // Renderizar la playlist visualmente
+    function renderPlaylist() {
+        playlistElement.innerHTML = '';
+        playlists[currentPlaylist].forEach((song, index) => {
             const li = document.createElement('li');
             li.textContent = song.title;
             if (index === currentSongIndex) {
