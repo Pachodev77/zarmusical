@@ -1,6 +1,6 @@
 // Next.js API route compatible con Vercel para servir playlists desde Google Drive
 
-import { getCloudinaryAudioUrls } from './cloudinary_audio';
+const { getCloudinaryAudioUrls } = require('./cloudinary_audio');
 
 // Lista de categorías a buscar en Cloudinary
 const categories = ['urbano', 'latino', 'rock', 'pop', 'reggaeton', 'trap', 'romanticas', 'rancheras', 'vallenato', 'salsa', 'bachata', 'merengue', 'electronica', 'crossover'];
