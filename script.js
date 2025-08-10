@@ -114,22 +114,38 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchPlaylists() {
         try {
             const response = await fetch('/api/songs');
-            playlists = await response.json();
+            const data = await response.json();
+            // Verificar si recibimos datos válidos
+            if (!data || typeof data !== 'object') {
+                throw new Error('Invalid response format');
+            }
             // Reescribir URLs de Cloudinary para pasar por el proxy
-            Object.keys(playlists).forEach(cat => {
-                playlists[cat] = playlists[cat].map(song => {
-                    if (song.src && song.src.includes('res.cloudinary.com')) {
-                        // Encodifica la URL para evitar problemas con caracteres especiales
-                        song.src = `/api/proxy_audio?url=${encodeURIComponent(song.src)}`;
-                    }
-                    return song;
-                });
+            const processedPlaylists = {};
+            Object.keys(data).forEach(cat => {
+                if (Array.isArray(data[cat])) {
+                    processedPlaylists[cat] = data[cat].map(song => {
+                        if (song.src && song.src.includes('res.cloudinary.com')) {
+                            song.src = `/api/proxy_audio?url=${encodeURIComponent(song.src)}`;
+                        }
+                        return song;
+                    });
+                } else {
+                    processedPlaylists[cat] = [];
+                }
             });
-            changeCategory('urbano'); // Load default category
+            playlists = processedPlaylists;
+            return processedPlaylists; // Devolver playlists procesadas
         } catch (error) {
             console.error('Error fetching playlists:', error);
+            throw error; // Propagar el error para que el llamante lo maneje
         }
     }
+
+    // Inicializar playlists con valores por defecto
+    playlists = categories.reduce((acc, cat) => ({
+        ...acc,
+        [cat]: []
+    }), {});
 
     const categories = ['urbano', 'latino', 'electro']; // Define categories array
     let currentCategoryIndex = 0; // Track current category index
@@ -450,6 +466,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Init
-    fetchPlaylists();
-    drawVisualizer();
+    fetchPlaylists()
+        .then(playlists => {
+            // Solo cambiamos la categoría si hubo playlists válidas
+            if (Object.values(playlists).some(arr => arr.length > 0)) {
+                changeCategory('urbano');
+            } else {
+                console.error('No se encontraron canciones en ninguna categoría');
+            }
+            drawVisualizer();
+        })
+        .catch(error => {
+            console.error('Error inicializando app:', error);
+            // Mostrar mensaje de error en la UI
+            songTitle.textContent = 'Error al cargar las canciones';
+            songArtist.textContent = 'Verifica la conexión a internet';
+        });
 });
