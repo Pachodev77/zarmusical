@@ -369,25 +369,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const loadedDataHandler = () => {
                         console.log('Audio loaded data event fired, readyState:', audio.readyState);
                         if (audio.readyState >= 2) { // HAVE_CURRENT_DATA or greater
-                            safeResolve();
-                        }
-                    };
-                    
-                    // Set up canplaythrough handler
-                    const canPlayThroughHandler = () => {
-                        console.log('Audio canplaythrough event fired');
-                        safeResolve();
-                    };
-                    
-                    // Cleanup function
-                    const cleanup = () => {
-                        clearTimeout(timeout);
-                        audio.removeEventListener('error', errorHandler);
-                        audio.removeEventListener('loadeddata', loadedDataHandler);
-                        audio.removeEventListener('canplaythrough', canPlayThroughHandler);
-                    };
-                    
-                    // Helper function to get media error descriptions
                     function getMediaErrorDescription(errorCode) {
                         const errorTypes = {
                             1: 'MEDIA_ERR_ABORTED - The user canceled the fetching process.',
@@ -699,12 +680,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function drawVisualizer() {
-        requestAnimationFrame(drawVisualizer);
+        // Get visualizer canvas and context if not already set
+        const visualizer = document.getElementById('visualizer');
+        if (!visualizer) {
+            console.warn('Visualizer canvas not found');
+            return;
+        }
+        
+        const visualizerCtx = visualizer.getContext('2d');
+        if (!visualizerCtx) {
+            console.warn('Could not get 2D context for visualizer');
+            return;
+        }
+        
+        // Check if analyzer and dataArray are ready
+        if (!analyzer || !dataArray) {
+            console.log('Visualizer: analyzer or dataArray not ready');
+            animationId = requestAnimationFrame(drawVisualizer);
+            return;
+        }
+        
+        // Schedule next frame
+        animationId = requestAnimationFrame(drawVisualizer);
 
         // Set canvas dimensions to match its displayed size
         visualizer.width = visualizer.offsetWidth;
         visualizer.height = visualizer.offsetHeight;
 
+        // Update color cycle
         hue = (hue + 0.5) % 360;
 
         // Update CSS variables for dynamic coloring
@@ -723,7 +726,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Animate title colors
         animateTitleColors();
 
-        analyser.getByteFrequencyData(dataArray);
+        // Get frequency data
+        analyzer.getByteFrequencyData(dataArray);
         
         // Añade un sutil efecto de desvanecimiento para dejar estelas
         visualizerCtx.fillStyle = 'rgba(30, 30, 30, 0.1)';
