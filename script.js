@@ -171,6 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dataArray = null;
     let animationId = null;
     let visualizerRunning = false;
+    let audioContextInitialized = false;
 
     // --- SHUFFLE STATE ---
     let shuffleOrder = [];
@@ -198,43 +199,54 @@ document.addEventListener('DOMContentLoaded', () => {
             // Set up audio event listeners
             audio.addEventListener('timeupdate', updateProgress);
             audio.addEventListener('ended', nextSong);
+            audio.addEventListener('play', () => {
+                if (!audioContextInitialized) {
+                    initializeAudioContext();
+                }
+            });
         }
     }
+    
     // Audio context variables - will be initialized on first use
-    let analyser, source, bufferLength;
+    let source, bufferLength;
     
     // Function to initialize audio context on first user interaction
     async function initializeAudioContext() {
-        if (audioContextInitialized) return;
-        
         try {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioContext.createAnalyser();
-            
-            if (audio) {
+            if (!audioContext) {
+                // Create audio context
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioContext = new AudioContext();
+                
+                // Create analyzer node
+                analyzer = audioContext.createAnalyser();
+                analyzer.fftSize = 2048;
+                
+                // Create source from audio element
                 source = audioContext.createMediaElementSource(audio);
-                source.connect(analyser);
-                analyser.connect(audioContext.destination);
-                analyser.fftSize = 256;
-                bufferLength = analyser.frequencyBinCount;
+                source.connect(analyzer);
+                analyzer.connect(audioContext.destination);
+                
+                // Set up data array for visualization
+                bufferLength = analyzer.frequencyBinCount;
                 dataArray = new Uint8Array(bufferLength);
                 
-                // Initialize visualizer canvas
-                const visualizer = document.getElementById('visualizer');
-                if (visualizer) {
-                    visualizer.width = visualizer.offsetWidth;
-                    visualizer.height = visualizer.offsetHeight;
-                }
-                
                 console.log('AudioContext initialized successfully');
-                audioContextInitialized = true;
-                return true;
             }
+            
+            // Resume audio context if it was suspended
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+                console.log('AudioContext resumed');
+            }
+            
+            audioContextInitialized = true;
+            return true;
         } catch (error) {
-            console.error('Error initializing audio context:', error);
+            console.error('Error initializing AudioContext:', error);
+            audioContextInitialized = false;
             return false;
         }
-        return false;
     }
 
     const playPauseBtn = document.getElementById('play-pause-btn');
