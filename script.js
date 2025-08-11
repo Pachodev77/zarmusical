@@ -167,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Variables globales
     let audio = null;
     let audioContext = null;
-    let audioContextInitialized = false;
     let analyzer = null;
     let dataArray = null;
     let animationId = null;
@@ -189,17 +188,20 @@ document.addEventListener('DOMContentLoaded', () => {
         shufflePointer = 0;
     }
 
-    // Get audio element and verify it exists
-    const audio = document.getElementById('audio-fallback');
+    // Initialize audio element if not already done
     if (!audio) {
-        console.error('Audio element not found in the DOM');
-    } else {
-        audio.style.display = 'none'; // Mantener oculto si no quieres controles visibles
+        audio = document.getElementById('audio-fallback');
+        if (!audio) {
+            console.error('Audio element not found in the DOM');
+        } else {
+            audio.style.display = 'none'; // Keep it hidden if you don't want visible controls
+            // Set up audio event listeners
+            audio.addEventListener('timeupdate', updateProgress);
+            audio.addEventListener('ended', nextSong);
+        }
     }
-
-    // Audio context will be initialized on first user interaction
-    let audioContext, analyser, source, dataArray, bufferLength;
-    let audioContextInitialized = false;
+    // Audio context variables - will be initialized on first use
+    let analyser, source, bufferLength;
     
     // Function to initialize audio context on first user interaction
     async function initializeAudioContext() {
