@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "**/*.@(html|css|js)",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "CLOUDINARY_CLOUD_NAME": "@cloudinary_cloud_name",
+      "CLOUDINARY_API_KEY": "@cloudinary_api_key",
+      "CLOUDINARY_API_SECRET": "@cloudinary_api_secret"
+    }
+  }
+}
