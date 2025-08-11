@@ -429,7 +429,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             safeReject(new Error('Audio loading timeout - no data received'));
                         }
                     }, 10000); // 10 second timeout
-                });
                 
                 try {
                     console.log('Starting audio load...');
