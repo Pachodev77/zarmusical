@@ -555,6 +555,7 @@ const loadSong = async (song) => {
     console.log('loadSong called with:', song);
     if (!song) {
         console.error('No song provided to loadSong');
+        showError('No se pudo cargar la canción');
         return;
     }
     
@@ -562,50 +563,108 @@ const loadSong = async (song) => {
     console.log('Updating now playing UI');
     updateNowPlayingUI(song);
     
+    // Verificar si la URL es de audio o video
+    const isVideoFile = song.audioUrl && (
+        song.audioUrl.includes('/video/') || 
+        song.audioUrl.endsWith('.mp4')
+    );
+    
+    // Si es un video, asegurarnos de que la URL termine en .mp3
+    if (isVideoFile && !song.audioUrl.endsWith('.mp3')) {
+        console.log('Ajustando URL de video para extraer audio...');
+        try {
+            const url = new URL(song.audioUrl);
+            const pathParts = url.pathname.split('/');
+            const lastPart = pathParts[pathParts.length - 1];
+            
+            // Reemplazar la extensión por .mp3 si es necesario
+            if (!lastPart.endsWith('.mp3')) {
+                const baseName = lastPart.split('.')[0];
+                pathParts[pathParts.length - 1] = `${baseName}.mp3`;
+                url.pathname = pathParts.join('/');
+                song.audioUrl = url.toString();
+                console.log('URL ajustada para extraer audio:', song.audioUrl);
+            }
+        } catch (e) {
+            console.error('Error ajustando URL de audio:', e);
+        }
+    }
+    
     // Load audio
     if (elements.audio) {
-        console.log('Audio element found, loading new audio source');
-        elements.audio.pause();
-        console.log('Previous audio source paused');
-        
-        elements.audio.src = song.audioUrl;
-        console.log('New audio source set:', song.audioUrl);
-        
-        // Set crossOrigin to anonymous to handle CORS for audio analysis
-        elements.audio.crossOrigin = 'anonymous';
-        
-        // Add error handler for audio loading
-        elements.audio.onerror = (e) => {
-            console.error('Error loading audio:', e);
-            console.error('Audio element error:', elements.audio.error);
-        };
-        
-        // Add canplay event to know when audio is ready
-        elements.audio.oncanplay = () => {
-            console.log('Audio can play, duration:', elements.audio.duration);
-            updateTotalTime();
-        };
-        
-        console.log('Loading audio source');
-        elements.audio.load();
-        
-        // Play the audio
-        console.log('Attempting to play audio');
-        const playPromise = elements.audio.play();
-        
-        // Handle autoplay restrictions
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                console.log('Audio playback started successfully');
-                updatePlayPauseButton();
-            }).catch(error => {
-                console.error('Autoplay prevented:', error);
-                // Show play button to let user start playback
-                updatePlayPauseButton();
-            });
+        try {
+            console.log('Audio element found, loading new audio source');
+            elements.audio.pause();
+            console.log('Previous audio source paused');
+            
+            // Create a new audio element to test the source
+            const testAudio = new Audio();
+            testAudio.src = song.audioUrl;
+            
+            // Configurar el tipo MIME correcto para el elemento de audio
+            const audio = elements.audio;
+            audio.type = 'audio/mpeg'; // Forzar MP3 que es ampliamente compatible
+            
+            // Verificar si el navegador puede reproducir MP3
+            const canPlayMp3 = audio.canPlayType('audio/mpeg');
+            console.log('Compatibilidad con MP3:', canPlayMp3);
+            
+            if (canPlayMp3 === '') {
+                console.error('El navegador no soporta MP3');
+                showError('Tu navegador no soporta reproducción de audio MP3. Por favor, usa un navegador más moderno.');
+                return;
+            }
+            
+            // Set the source on the main audio element
+            elements.audio.src = song.audioUrl;
+            console.log('New audio source set:', song.audioUrl);
+            
+            // Set crossOrigin to anonymous to handle CORS for audio analysis
+            elements.audio.crossOrigin = 'anonymous';
+            
+            // Add error handler for audio loading
+            elements.audio.onerror = (e) => {
+                console.error('Error loading audio:', e);
+                console.error('Audio element error:', elements.audio.error);
+                showError('Error al cargar el audio: ' + (elements.audio.error?.message || 'Formato no soportado'));
+            };
+            
+            // Add canplay event to know when audio is ready
+            elements.audio.oncanplay = () => {
+                console.log('Audio can play, duration:', elements.audio.duration);
+                updateTotalTime();
+            };
+            
+            console.log('Loading audio source');
+            elements.audio.load();
+            
+            // No reproducir automáticamente, solo cargar
+            console.log('Audio loaded, waiting for user interaction');
+            updatePlayPauseButton();
+            
+            // Mostrar botón de reproducción
+            if (elements.playPauseBtn) {
+                elements.playPauseBtn.style.display = 'flex';
+                elements.playPauseBtn.addEventListener('click', function playOnFirstInteraction() {
+                    // Reproducir solo después de la interacción del usuario
+                    elements.audio.play().then(() => {
+                        console.log('Playback started after user interaction');
+                        updatePlayPauseButton();
+                    }).catch(error => {
+                        console.error('Error starting playback:', error);
+                        showError('Error al reproducir: ' + (error.message || 'Error desconocido'));
+                    });
+                    // Eliminar el event listener después de la primera interacción
+                    elements.playPauseBtn.removeEventListener('click', playOnFirstInteraction);
+                }, { once: true });
+            }
+        } catch (error) {
+            console.error('Error in loadSong:', error);
+            showError('Error al cargar la canción: ' + error.message);
         }
     } else {
         console.error('Audio element not found');
+        showError('Error: Elemento de audio no encontrado');
     }
 };
 

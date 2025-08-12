@@ -1,0 +1,10 @@
+{
+  "name": "sonido-callejero-api",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "dependencies": {
+    "cloudinary": "^2.7.0",
+    "dotenv": "^17.2.1"
+  }
+}

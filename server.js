@@ -24,25 +24,45 @@ app.get('/api/songs', async (req, res) => {
     const categories = ['music/urbano', 'music/latino', 'music/electro'];
     const playlists = {};
 
-    for (const category of categories) {
+    // Obtener canciones para cada categoría en paralelo
+    const categoryPromises = categories.map(async (category) => {
       try {
         const songs = await getCloudinaryAudioUrls(category);
-        playlists[category] = songs.map(song => ({
-          title: song.title,
-          artist: 'Artista',
-          src: song.src,
-          cover: song.cover || 'https://via.placeholder.com/150'
-        }));
+        console.log(`Se encontraron ${songs.length} canciones en ${category}`);
+        
+        // Mapear las canciones al formato esperado por el frontend
+        return {
+          category,
+          songs: songs.map(song => ({
+            id: song.id,
+            title: song.title,
+            artist: song.artist,
+            audioUrl: song.audioUrl,
+            cover: song.cover,
+            isVideo: song.isVideo || false
+          }))
+        };
       } catch (error) {
         console.error(`Error obteniendo canciones para ${category}:`, error);
-        playlists[category] = [];
+        return { category, songs: [] };
       }
-    }
+    });
+
+    // Esperar a que todas las categorías se resuelvan
+    const results = await Promise.all(categoryPromises);
+    
+    // Convertir los resultados al formato esperado
+    results.forEach(({ category, songs }) => {
+      playlists[category] = songs;
+    });
 
     res.json(playlists);
   } catch (error) {
     console.error('Error en /api/songs:', error);
-    res.status(500).json({ error: 'Error al obtener las canciones' });
+    res.status(500).json({ 
+      error: 'Error al obtener las canciones',
+      details: error.message 
+    });
   }
 });
 
