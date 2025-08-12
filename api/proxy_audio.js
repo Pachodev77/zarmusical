@@ -78,16 +78,19 @@ async function handleAudioResponse(response, res) {
   
   // Force audio/mp3 for .mp3 files if content-type is not set or is generic
   if (!contentType || contentType === 'application/octet-stream') {
-    if (url.includes('.mp3')) {
-      contentType = 'audio/mp3';
-    } else if (url.includes('.wav')) {
+    const requestUrl = req.url || '';
+    if (requestUrl.includes('.mp3')) {
+      contentType = 'audio/mpeg'; // Note: Standard MIME type for MP3 is audio/mpeg, not audio/mp3
+    } else if (requestUrl.includes('.wav')) {
       contentType = 'audio/wav';
-    } else if (url.includes('.ogg')) {
+    } else if (requestUrl.includes('.ogg')) {
       contentType = 'audio/ogg';
+    } else if (requestUrl.includes('.m4a')) {
+      contentType = 'audio/mp4';
     } else {
       contentType = 'audio/mpeg'; // Default fallback
     }
-    console.log('Forced content-type to:', contentType);
+    console.log('Forced content-type to:', contentType, 'for URL:', requestUrl);
   }
   const contentLength = response.headers.get('content-length');
   const contentRange = response.headers.get('content-range');

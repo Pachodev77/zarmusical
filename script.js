@@ -193,18 +193,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!audio) {
         audio = document.getElementById('audio-fallback');
         if (!audio) {
-            console.error('Audio element not found in the DOM');
-        } else {
-            audio.style.display = 'none'; // Keep it hidden if you don't want visible controls
-            // Set up audio event listeners
-            audio.addEventListener('timeupdate', updateProgress);
-            audio.addEventListener('ended', nextSong);
-            audio.addEventListener('play', () => {
-                if (!audioContextInitialized) {
-                    initializeAudioContext();
-                }
-            });
+            audio = new Audio();
+            audio.id = 'audio-fallback';
+            document.body.appendChild(audio);
         }
+        // Set CORS attribute to allow audio analysis
+        audio.crossOrigin = 'anonymous';
+        
+        // Set up audio event listeners
+        audio.addEventListener('timeupdate', updateProgress);
+        audio.addEventListener('ended', nextSong);
+        audio.addEventListener('error', (e) => {
+            console.error('Audio element error:', e);
+        });
+        
+        // Log audio element properties for debugging
+        console.log('Audio element initialized with:', {
+            crossOrigin: audio.crossOrigin,
+            canPlayType: {
+                'audio/mp3': audio.canPlayType('audio/mp3'),
+                'audio/mpeg': audio.canPlayType('audio/mpeg'),
+                'audio/ogg': audio.canPlayType('audio/ogg'),
+                'audio/wav': audio.canPlayType('audio/wav')
+            }
+        });
     }
     
     // Audio context variables - will be initialized on first use
@@ -283,6 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             currentSongIndex = 0;
         }
+        // Render the playlist for the new category
+        renderPlaylist();
+        // Load and play the first song in the category
         loadSong(currentSongIndex);
         playSong(); // Autoplay when category changes
     }
@@ -325,16 +340,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Configurar la fuente de audio
                 console.log('Setting audio source to:', song.src);
                 
+                // Helper function to get media error description
+                function getMediaErrorDescription(errorCode) {
+                    const errorTypes = {
+                        1: 'MEDIA_ERR_ABORTED - The user canceled the fetching process.',
+                        2: 'MEDIA_ERR_NETWORK - A network error occurred while fetching the media.',
+                        3: 'MEDIA_ERR_DECODE - An error occurred while decoding the media.',
+                        4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - The media is not supported.'
+                    };
+                    return errorTypes[errorCode] || 'Unknown media error';
+                }
+
                 // Create a promise to handle the audio loading
-                const loadAudio = () => new Promise((originalResolve, originalReject) => {
+                return new Promise((resolve, reject) => {
                     let resolved = false;
                     let rejected = false;
+                    let timeoutId = null;
+                    
+                    const cleanup = () => {
+                        if (timeoutId) clearTimeout(timeoutId);
+                        audio.removeEventListener('error', errorHandler);
+                        audio.removeEventListener('canplaythrough', canPlayThroughHandler);
+                        audio.removeEventListener('loadeddata', loadedDataHandler);
+                    };
                     
                     const safeResolve = () => {
                         if (!resolved && !rejected) {
                             resolved = true;
                             cleanup();
-                            originalResolve();
+                            resolve();
                         }
                     };
                     
@@ -342,11 +376,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (!resolved && !rejected) {
                             rejected = true;
                             cleanup();
-                            originalReject(error);
+                            reject(error);
                         }
                     };
                     
-                    // Set up error handler
+                    // Set up event handlers
                     const errorHandler = (e) => {
                         console.error('Audio element error:', {
                             error: audio.error,
@@ -365,58 +399,62 @@ document.addEventListener('DOMContentLoaded', () => {
                         safeReject(new Error(`Audio error: ${errorDetails}`));
                     };
                     
-                    // Set up loaded data handler
+                    const canPlayThroughHandler = () => {
+                        console.log('Can play through audio');
+                        safeResolve();
+                    };
+                    
                     const loadedDataHandler = () => {
                         console.log('Audio loaded data event fired, readyState:', audio.readyState);
                         if (audio.readyState >= 2) { // HAVE_CURRENT_DATA or greater
-                    function getMediaErrorDescription(errorCode) {
-                        const errorTypes = {
-                            1: 'MEDIA_ERR_ABORTED - The user canceled the fetching process.',
-                            2: 'MEDIA_ERR_NETWORK - A network error occurred while fetching the media.',
-                            3: 'MEDIA_ERR_DECODE - An error occurred while decoding the media.',
-                            4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - The media is not supported.'
-                        };
-                        return errorTypes[errorCode] || 'Unknown media error';
+                            safeResolve();
+                        }
+                    };
+                    
+                    // Set up event listeners
+                    audio.addEventListener('error', errorHandler);
+                    audio.addEventListener('canplaythrough', canPlayThroughHandler);
+                    audio.addEventListener('loadeddata', loadedDataHandler);
+                    
+                    // For testing: Use direct Cloudinary URL instead of proxy
+                    // Extract the actual Cloudinary URL from the proxy URL
+                    let audioUrl = song.src;
+                    if (audioUrl.includes('/api/proxy_audio?url=')) {
+                        // Extract the encoded URL from the proxy URL
+                        const urlMatch = audioUrl.match(/url=([^&]+)/);
+                        if (urlMatch && urlMatch[1]) {
+                            audioUrl = decodeURIComponent(urlMatch[1]);
+                            console.log('Using direct Cloudinary URL:', audioUrl);
+                        }
                     }
                     
-                    // Add event listeners
-                    audio.addEventListener('error', errorHandler, { once: true });
-                    audio.addEventListener('loadeddata', loadedDataHandler, { once: true });
-                    audio.addEventListener('canplaythrough', canPlayThroughHandler, { once: true });
-                    
-                    // Create a new audio element to test the source
-                    const testAudio = new Audio();
-                    testAudio.preload = 'auto';
-                    
-                    // Set up test error handler
-                    testAudio.addEventListener('error', (e) => {
-                        console.error('Test audio error:', {
-                            error: testAudio.error,
-                            networkState: testAudio.networkState,
-                            readyState: testAudio.readyState
-                        });
-                    });
-                    
-                    // Test if the audio can be played
-                    const canPlay = testAudio.canPlayType('audio/mp3');
-                    console.log('Browser can play MP3:', canPlay);
-                    
-                    // Set the source and start loading
-                    console.log('Setting audio source and loading...');
-                    
                     // Add cache buster to prevent caching issues
-                    const cacheBuster = `?t=${Date.now()}`;
-                    audio.src = song.src + (song.src.includes('?') ? '&' : '?') + cacheBuster;
+                    const cacheBuster = `t=${Date.now()}`;
+                    const separator = audioUrl.includes('?') ? '&' : '?';
+                    audio.src = `${audioUrl}${separator}${cacheBuster}`;
                     
-                    // Force the browser to treat this as an audio file
-                    audio.type = 'audio/mp3';
+                    // Log the final URL for debugging
+                    console.log('Final audio source URL:', audio.src);
+                    
+                    // Set appropriate MIME type based on file extension
+                    const extension = audioUrl.split('.').pop().toLowerCase();
+                    if (extension === 'mp3') {
+                        audio.type = 'audio/mpeg';
+                    } else if (extension === 'wav') {
+                        audio.type = 'audio/wav';
+                    } else if (extension === 'ogg') {
+                        audio.type = 'audio/ogg';
+                    } else if (extension === 'm4a') {
+                        audio.type = 'audio/mp4';
+                    } else {
+                        console.warn('Unknown audio format, using default MIME type');
+                        audio.type = 'audio/mpeg';
+                    }
+                    
                     audio.preload = 'auto';
                     
-                    // Try to load the audio
-                    audio.load();
-                    
                     // Fallback in case events don't fire as expected
-                    const timeout = setTimeout(() => {
+                    timeoutId = setTimeout(() => {
                         console.log('Audio loading timeout check, readyState:', audio.readyState);
                         if (audio.readyState >= 2) {
                             console.log('Fallback: Audio readyState is', audio.readyState);
@@ -429,6 +467,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             safeReject(new Error('Audio loading timeout - no data received'));
                         }
                     }, 10000); // 10 second timeout
+                    
+                    // Start loading the audio
+                    audio.load();
+                });
                 
                 try {
                     console.log('Starting audio load...');
@@ -480,8 +522,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Renderizar la playlist visualmente
+    // Render the playlist visually
     function renderPlaylist() {
+        if (!playlistElement) return;
+        
         playlistElement.innerHTML = '';
         playlists[currentPlaylist].forEach((song, index) => {
             const li = document.createElement('li');
@@ -496,43 +540,44 @@ document.addEventListener('DOMContentLoaded', () => {
             playlistElement.appendChild(li);
         });
     }
-
-    async function playSong() {
-        if (!audio) {
-            console.error('Audio element not available');
-            return;
+    
+    // Update play/pause button state
+    function updatePlayPauseButton() {
+        if (!playPauseBtn || !playIcon || !pauseIcon) return;
+        
+        if (isPlaying) {
+            playIcon.classList.add('hidden');
+            pauseIcon.classList.remove('hidden');
+        } else {
+            playIcon.classList.remove('hidden');
+            pauseIcon.classList.add('hidden');
         }
+    }
+
+    // Play song function
+    async function playSong() {
+        if (!playlists[currentPlaylist] || !playlists[currentPlaylist].length) return;
+
+        const song = playlists[currentPlaylist][currentSongIndex];
+        if (!song) return;
 
         try {
-            // Log audio element state before playing
             console.log('Audio element state before play:', {
                 readyState: audio.readyState,
                 networkState: audio.networkState,
                 error: audio.error,
                 paused: audio.paused,
-                currentSrc: audio.currentSrc,
-                src: audio.src,
-                duration: audio.duration,
-                canPlayType: {
-                    'audio/mp3': audio.canPlayType('audio/mp3'),
-                    'audio/mpeg': audio.canPlayType('audio/mpeg'),
-                    'audio/ogg': audio.canPlayType('audio/ogg'),
-                    'audio/wav': audio.canPlayType('audio/wav')
-                },
-                audioElement: audio
+                currentSrc: audio.currentSrc
             });
 
             // Initialize audio context on first play if not already done
-            if (!audioContextInitialized) {
+            if (!audioContext) {
                 console.log('Initializing audio context for first play...');
-                const initialized = await initializeAudioContext();
-                if (!initialized) {
-                    throw new Error('Failed to initialize audio context');
-                }
+                await initializeAudioContext();
             }
             
-            // Ensure audio context is ready
-            if (audioContext && audioContext.state === 'suspended') {
+            // Resume audio context if suspended
+            if (audioContext.state === 'suspended') {
                 console.log('AudioContext is suspended, resuming...');
                 await audioContext.resume();
                 console.log('AudioContext resumed successfully');
@@ -594,35 +639,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function playPauseToggle() {
-        if (isPlaying) {
-            pauseSong();
+        if (!playlists[currentPlaylist]?.length) return;
+        
+        if (audio.paused) {
+            playSong().catch(console.error);
         } else {
-            playSong();
+            pauseSong();
         }
     }
 
     function nextSong() {
+        if (!playlists[currentPlaylist]?.length) return;
+        
         if (isShuffle) {
             if (shufflePointer < shuffleOrder.length - 1) {
                 shufflePointer++;
                 currentSongIndex = shuffleOrder[shufflePointer];
             } else {
-                // All songs played in this genre, move to next genre
                 currentCategoryIndex = (currentCategoryIndex + 1) % categories.length;
-                changeCategory(categories[currentCategoryIndex], true); // true = keep shuffle
+                changeCategory(categories[currentCategoryIndex], true);
                 return;
             }
         } else {
-            currentSongIndex++;
-            if (currentSongIndex >= playlists[currentPlaylist].length) {
-                // Move to next category
-                currentCategoryIndex = (currentCategoryIndex + 1) % categories.length;
-                changeCategory(categories[currentCategoryIndex]);
-                return; // Exit to prevent loading song from old category
+            if (currentSongIndex >= playlists[currentPlaylist].length - 1) {
+                if (!isRepeat) {
+                    currentCategoryIndex = (currentCategoryIndex + 1) % categories.length;
+                    changeCategory(categories[currentCategoryIndex]);
+                    return;
+                }
+                currentSongIndex = 0;
+            } else {
+                currentSongIndex++;
             }
         }
+        
         loadSong(currentSongIndex);
-        playSong();
+        if (isPlaying) playSong().catch(console.error);
     }
 
     function prevSong() {
@@ -756,10 +808,17 @@ document.addEventListener('DOMContentLoaded', () => {
     audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('ended', () => {
         if (isRepeat) {
-            playSong();
+            audio.currentTime = 0;
+            playSong().catch(console.error);
         } else {
             nextSong();
         }
+    });
+    
+    audio.addEventListener('error', () => {
+        console.error('Audio error:', audio.error);
+        isPlaying = false;
+        updatePlayPauseButton();
     });
     progressBar.addEventListener('input', (e) => audio.currentTime = (e.target.value / 100) * audio.duration);
     volumeSlider.addEventListener('input', (e) => audio.volume = e.target.value);
@@ -801,6 +860,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Solo cambiamos la categoría si hubo playlists válidas
             if (Object.values(playlists).some(arr => arr.length > 0)) {
                 changeCategory('urbano');
+                // Render the playlist after changing category
+                renderPlaylist();
             } else {
                 console.error('No se encontraron canciones en ninguna categoría');
             }
