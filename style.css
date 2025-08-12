@@ -7,13 +7,55 @@
     --background-dark: #121212;
     --background-light: #1e1e1e;
     --text-color: #e0e0e0;
+    --transition-speed: 0.3s;
+}
+
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    height: 100%;
 }
 
 body {
     position: relative;
     min-height: 100vh;
     margin: 0;
-    padding-bottom: 60px; /* Espacio para el footer */
+    padding-bottom: 60px;
+    background-color: var(--background-dark);
+    color: var(--text-color);
+    font-family: 'Roboto', sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Header styles */
+.app-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+#sonido-callejero-title {
+    font-family: 'Bangers', cursive, sans-serif;
+    text-transform: uppercase;
+    font-weight: 900;
+    font-size: 3.5em;
+    letter-spacing: 0.1em;
+    color: var(--primary-color);
+    text-shadow: 0 0 15px var(--primary-color);
+    margin: 0;
+    padding: 1rem 0;
+    transition: all 0.3s ease;
 }
 
 #disco-bg {
@@ -183,21 +225,37 @@ body {
     position: relative;
     z-index: 1;
 }
-    position: relative;
-    z-index: 1;
+/* Category selector */
+.category-selector {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
 }
 
-    background-color: var(--background-dark);
-    color: var(--text-color);
-    font-family: 'Roboto', sans-serif;
+.category-btn {
+    background: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 0.5rem 1.5rem;
+    border-radius: 25px;
+    cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all var(--transition-speed) ease;
+    outline: none;
+}
 
-    display: flex;
-    flex-direction: column; /* Changed to column to stack title and container */
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    padding: 20px;
+.category-btn:hover,
+.category-btn.active {
+    background: var(--primary-color);
+    color: var(--background-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px var(--shadow-color);
+}
 }
 
 body > h1 {

@@ -2,8 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sonido Callejero</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Reproductor de música con visualizador y efectos de iluminación">
+    <meta name="theme-color" content="#121212">
+    <title>Sonido Callejero - Música Urbana, Latina y Electrónica</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
@@ -11,7 +13,12 @@
 </head>
 <body>
     <canvas id="disco-bg"></canvas>
-    <h1 id="sonido-callejero-title"><span>S</span><span>o</span><span>n</span><span>i</span><span>d</span><span>o</span> <span>C</span><span>a</span><span>l</span><span>l</span><span>e</span><span>j</span><span>e</span><span>r</span><span>o</span></h1>
+    <header class="app-header">
+        <h1 id="sonido-callejero-title">
+            <span>S</span><span>o</span><span>n</span><span>i</span><span>d</span><span>o</span> 
+            <span>C</span><span>a</span><span>l</span><span>l</span><span>e</span><span>j</span><span>e</span><span>r</span><span>o</span>
+        </h1>
+    </header>
     <div class="category-selector">
         <button class="category-btn" data-category="urbano">Urbano</button>
         <button class="category-btn" data-category="latino">Latino</button>
@@ -76,8 +83,8 @@
     <audio id="audio-fallback" controls style="display:none"></audio>
     <footer class="app-footer">
         <div class="footer-content">
-            <p> 2025 Sonido Callejero - Todos los derechos reservados</p>
-            <p>Diseñado y desarrollado con </p>
+            <p>&copy; 2025 Sonido Callejero - Todos los derechos reservados</p>
+            <p>Diseñado y desarrollado con ❤️</p>
         </div>
     </footer>
     <script src="script.js"></script>
