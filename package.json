@@ -13,5 +13,8 @@
     "cloudinary": "^2.7.0",
     "dotenv": "^17.2.1",
     "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "vercel": "^44.7.3"
   }
 }
