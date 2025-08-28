@@ -29,25 +29,23 @@ body {
     font-family: 'UnifrakturMaguntia', cursive;
     text-transform: none;
     font-weight: normal;
-    font-size: 4.5em; /* Aumentado de 3.5em a 4.5em */
+    font-size: 4.5em;
     font-weight: 900;
     letter-spacing: 0.1em;
     text-align: center;
-    margin-top: 40px;
-    margin-bottom: 20px;
+    margin: 40px 20px 20px;
     color: var(--primary-color);
-    text-shadow: 
-        0 0 2px #fff,
-        0 0 4px #fff,
-        0 0 6px #fff,
-        0 0 10px #fff,
-        0 0 15px #fff,
-        0 0 25px var(--primary-color),
-        0 0 35px var(--primary-color);
-    -webkit-text-stroke: 0.5px #ffffff;
-    text-stroke: 0.5px #ffffff;
+    -webkit-text-stroke: 0.1px #ffffff;
     z-index: 1;
     position: relative;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#soundsphere-title span {
+    display: inline-block;
+    white-space: nowrap;
 }
 
 .container {
@@ -189,14 +187,11 @@ body {
     position: relative;
     z-index: 1;
 }
-    position: relative;
-    z-index: 1;
-}
 
+body {
     background-color: var(--background-dark);
     color: var(--text-color);
     font-family: 'Roboto', sans-serif;
-
     display: flex;
     flex-direction: column; /* Changed to column to stack title and container */
     justify-content: center;
