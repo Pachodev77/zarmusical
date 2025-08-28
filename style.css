@@ -25,18 +25,27 @@ body {
     background: #111; /* fondo oscuro para resaltar las luces */
 }
 
-#zar-musical-title {
-    font-family: 'Bangers', cursive, sans-serif;
-    text-transform: uppercase;
-    font-weight: bold;
-    font-size: 3.5em;
+#soundsphere-title {
+    font-family: 'UnifrakturMaguntia', cursive;
+    text-transform: none;
+    font-weight: normal;
+    font-size: 4.5em; /* Aumentado de 3.5em a 4.5em */
     font-weight: 900;
     letter-spacing: 0.1em;
     text-align: center;
     margin-top: 40px;
     margin-bottom: 20px;
     color: var(--primary-color);
-    text-shadow: 0 0 15px var(--primary-color);
+    text-shadow: 
+        0 0 2px #fff,
+        0 0 4px #fff,
+        0 0 6px #fff,
+        0 0 10px #fff,
+        0 0 15px #fff,
+        0 0 25px var(--primary-color),
+        0 0 35px var(--primary-color);
+    -webkit-text-stroke: 0.5px #ffffff;
+    text-stroke: 0.5px #ffffff;
     z-index: 1;
     position: relative;
 }
@@ -92,8 +101,8 @@ body {
         max-width: 100vw;
         box-sizing: border-box;
     }
-    #zar-musical-title {
-        font-size: 3em;
+    #soundsphere-title {
+        font-size: 3.5em; /* Ajustado para versión móvil */
         margin-top: 20px;
         margin-bottom: 10px;
         text-align: center;

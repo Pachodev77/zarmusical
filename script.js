@@ -174,8 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const visualizer = document.getElementById('visualizer');
     const visualizerCtx = visualizer.getContext('2d');
     const categoryBtns = document.querySelectorAll('.category-btn');
-    const zarMusicalTitle = document.getElementById('zar-musical-title');
-    const titleSpans = zarMusicalTitle ? zarMusicalTitle.querySelectorAll('span') : [];
+    const soundsphereTitle = document.getElementById('soundsphere-title');
+    const titleSpans = soundsphereTitle ? soundsphereTitle.querySelectorAll('span') : [];
 
     function changeCategory(category, keepShuffle = false) {
         currentPlaylist = category;
