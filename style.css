@@ -33,7 +33,7 @@ body {
     line-height: 1.2; /* Reducido para permitir más altura */
     font-weight: 900;
     font-stretch: ultra-expanded; /* Hace las letras más estrechas y altas */
-    letter-spacing: 0.1em; /* Ajustado para compensar el mayor estiramiento */
+    letter-spacing: 0.05em; /* Espaciado entre letras original */
     text-align: center;
     margin: 40px 20px 20px;
     color: var(--primary-color);
