@@ -195,6 +195,7 @@ body {
     display: flex;
     justify-content: center;
     gap: 16px;
+    margin-top: 20px; /* Añadido margen superior */
     margin-bottom: 24px;
     position: relative;
     z-index: 1;
@@ -226,6 +227,7 @@ body > h1 {
     display: flex;
     justify-content: center;
     gap: 15px;
+    margin-top: 20px; /* Añadido margen superior */
     margin-bottom: 30px; /* Add space below the buttons */
 }
 
