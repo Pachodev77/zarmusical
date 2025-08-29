@@ -29,8 +29,8 @@ body {
     font-family: 'UnifrakturMaguntia', cursive;
     text-transform: none;
     font-weight: normal;
-    font-size: 6em; /* Aumentado aún más el tamaño de fuente */
-    line-height: 1.2; /* Reducido para permitir más altura */
+    font-size: 6.5em; /* Aumentado aún más el tamaño de fuente */
+    line-height: 1.1; /* Reducido para permitir más altura */
     font-weight: 900;
     font-stretch: ultra-expanded; /* Hace las letras más estrechas y altas */
     letter-spacing: 0.05em; /* Espaciado entre letras original */
@@ -45,7 +45,7 @@ body {
     text-overflow: clip;
     display: block;
     height: auto;
-    transform: scaleY(1.5); /* Aumentado el factor de escala vertical */
+    transform: scaleY(1.8); /* Aumentado aún más el factor de escala vertical */
     transform-origin: center; /* Asegura que la transformación sea desde el centro */
     margin: 30px 20px 30px; /* Ajustado el margen vertical para más espacio */
 }
