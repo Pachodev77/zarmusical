@@ -148,10 +148,12 @@ body {
         box-sizing: border-box;
     }
     #playlist {
-        max-width: 98vw;
+        max-width: 100%;
         width: 100%;
         margin: 0 auto;
         box-sizing: border-box;
+        max-height: none !important;
+        overflow-y: visible !important;
     }
     #playlist li {
         font-size: 0.95em;
@@ -525,8 +527,9 @@ header h1 {
 #playlist {
     list-style: none;
     padding: 0;
-    max-height: 200px;
-    overflow-y: auto;
+    max-height: none !important;
+    overflow-y: visible !important;
+    height: auto !important;
 }
 
 #playlist li {
@@ -572,19 +575,7 @@ header h1 {
     display: none !important;
 }
 
-/* Scrollbar styling */
-#playlist::-webkit-scrollbar {
-    width: 8px;
-}
-
-#playlist::-webkit-scrollbar-track {
-    background: #2a2a2a;
-}
-
-#playlist::-webkit-scrollbar-thumb {
-    background-color: var(--primary-color);
-    border-radius: 4px;
-}
+/* Scrollbar styling removed for full playlist visibility */
 
 /* Compact player on mobile */
 @media (max-width: 600px) {
@@ -651,9 +642,11 @@ header h1 {
     height: auto !important;
   }
   #playlist {
-    width: 96vw;
-    max-width: 98vw;
+    width: 100%;
+    max-width: 100%;
     margin: 0 auto;
+    max-height: none !important;
+    overflow-y: visible !important;
     box-sizing: border-box;
   }
 }
