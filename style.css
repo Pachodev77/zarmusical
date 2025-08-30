@@ -46,7 +46,7 @@ body {
     height: auto;
     transform: scaleY(1.8); /* Aumentado aún más el factor de escala vertical */
     transform-origin: center; /* Asegura que la transformación sea desde el centro */
-    margin: 80px 20px 30px; /* Ajustado el margen vertical para más espacio */
+    padding-top: 50px; /* Increased padding-top to move title even further down */
 }
 
 #soundsphere-title span {
@@ -219,7 +219,7 @@ body {
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    padding: 100px 20px 20px 20px;
+    padding: 20px 20px 20px 20px;
 }
 
 body > h1 {
@@ -597,7 +597,7 @@ header h1 {
     width: 100vw;
     min-height: 100vh;
     margin: 0;
-    padding: 20px 0 0 0; /* Adjusted padding-top for mobile */
+    padding: 0px 0 0 0; /* Removed padding-top for mobile */
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
