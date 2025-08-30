@@ -46,7 +46,7 @@ body {
     height: auto;
     transform: scaleY(1.8); /* Aumentado aún más el factor de escala vertical */
     transform-origin: center; /* Asegura que la transformación sea desde el centro */
-    padding-top: 50px; /* Increased padding-top to move title even further down */
+    padding-top: 20px; /* Set padding-top to 20px as requested */
 }
 
 #soundsphere-title span {
