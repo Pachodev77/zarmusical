@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/api/songs');
             playlists = await response.json();
-            changeCategory('urbano'); // Load default category
+            changeCategory('electro'); // Load default category
         } catch (error) {
             console.error('Error fetching playlists:', error);
         }
@@ -338,77 +338,57 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- VISUALIZADOR MÁS DINÁMICO Y RÍTMICO ---
-    let prevHeights = [];
+    // --- NUEVO VISUALIZADOR DE BARRAS DE FRECUENCIA ---
     function drawVisualizer() {
         requestAnimationFrame(drawVisualizer);
 
-        // Set canvas dimensions to match its displayed size
         visualizer.width = visualizer.offsetWidth;
         visualizer.height = visualizer.offsetHeight;
-
-        hue = (hue + 1.2) % 360;
-
-        // Update CSS variables for dynamic coloring
+        
+        hue = (hue + 0.5) % 360;
         const primaryColor = `hsl(${hue}, 100%, 50%)`;
-        const shadowColor = `hsla(${hue}, 100%, 50%, 0.5)`;
-        const darkBackgroundColor = `hsl(${hue}, 30%, 10%)`;
-        const lightBackgroundColor = `hsl(${hue}, 20%, 15%)`;
-        const textColor = `hsl(${hue}, 10%, 90%)`;
-
         document.documentElement.style.setProperty('--primary-color', primaryColor);
-        document.documentElement.style.setProperty('--shadow-color', shadowColor);
-        document.documentElement.style.setProperty('--background-dark', darkBackgroundColor);
-        document.documentElement.style.setProperty('--background-light', lightBackgroundColor);
-        document.documentElement.style.setProperty('--text-color', textColor);
-
-        // Animate title colors
+        document.documentElement.style.setProperty('--shadow-color', `hsla(${hue}, 100%, 50%, 0.5)`);
         animateTitleColors();
 
         analyser.getByteFrequencyData(dataArray);
-        
-        // Efecto de estela más pronunciado
-        visualizerCtx.fillStyle = 'rgba(30, 30, 30, 0.07)';
+
+        visualizerCtx.fillStyle = 'rgba(0, 0, 0, 0.15)'; // Un poco más de estela
         visualizerCtx.fillRect(0, 0, visualizer.width, visualizer.height);
 
-        const barCount = bufferLength;
-        const barWidth = visualizer.width / barCount;
+        const barWidth = (visualizer.width / bufferLength);
         let x = 0;
 
-        // Inicializar suavizado
-        if (prevHeights.length !== barCount) prevHeights = Array(barCount).fill(0);
+        // Calcular la energía de los bajos para la reactividad
+        let bassEnergy = 0;
+        for (let i = 0; i < 8; i++) {
+            bassEnergy += dataArray[i];
+        }
+        const normalizedBass = bassEnergy / (8 * 255); // Normalizar entre 0 y 1
 
-        // Ganancia para barras más altas
-        const GAIN = 1.6;
-        const EASING = 0.30; // Suavizado
+        for (let i = 0; i < bufferLength; i++) {
+            // Aumentar la ganancia significativamente en el lado derecho
+            const gain = 1 + (i / bufferLength) * 2.5;
+            
+            let barHeight = dataArray[i] * (visualizer.height / 255) * 0.9 * gain;
 
-        for (let i = 0; i < barCount; i++) {
-            // Aplica ganancia y suavizado para que "bailen" más
-            let target = dataArray[i] * GAIN;
-            let eased = prevHeights[i] + (target - prevHeights[i]) * EASING;
-            prevHeights[i] = eased;
-            let barHeight = eased;
-
-            // Rebote dinámico (más movimiento en graves)
-            if (i < barCount * 0.15) {
-                barHeight += Math.abs(Math.sin(Date.now()/140 + i)) * 18;
+            // Añadir "ruido" reactivo más fuerte
+            if (i > bufferLength / 3) {
+                const noise = Math.random() * normalizedBass * 40; // Ruido de hasta 40px
+                barHeight += noise;
             }
 
-            // Gradiente dinámico
-            let grad = visualizerCtx.createLinearGradient(x, visualizer.height, x, visualizer.height - barHeight);
-            grad.addColorStop(0, `hsl(${(hue + i*3)%360},100%,60%)`);
-            grad.addColorStop(1, `hsl(${(hue + i*7)%360},100%,40%)`);
-            visualizerCtx.fillStyle = grad;
+            const barHue = (hue + i * 2.5) % 360;
+            visualizerCtx.fillStyle = `hsl(${barHue}, 90%, 55%)`;
+            visualizerCtx.shadowColor = `hsl(${barHue}, 90%, 50%)`;
+            visualizerCtx.shadowBlur = 5;
 
-            // Sombra para profundidad
-            visualizerCtx.shadowColor = `hsl(${(hue + i*2)%360},100%,40%)`;
-            visualizerCtx.shadowBlur = 12;
+            // Dibuja las barras desde abajo, asegurando que no sean más altas que el canvas
+            visualizerCtx.fillRect(x, visualizer.height - barHeight, barWidth, Math.min(barHeight, visualizer.height));
 
-            // Dibuja barra
-            visualizerCtx.fillRect(x, visualizer.height - barHeight, barWidth - 1, barHeight);
-            visualizerCtx.shadowBlur = 0;
-            x += barWidth;
+            x += barWidth + 1; // +1 para el espacio entre barras
         }
+        visualizerCtx.shadowBlur = 0;
     }
 
     playPauseBtn.addEventListener('click', playPauseToggle);
