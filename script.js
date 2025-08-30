@@ -338,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- NUEVO VISUALIZADOR DE BARRAS DE FRECUENCIA ---
+    // --- VISUALIZADOR DE BARRAS DE FRECUENCIA REFINADO ---
     function drawVisualizer() {
         requestAnimationFrame(drawVisualizer);
 
@@ -353,40 +353,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
         analyser.getByteFrequencyData(dataArray);
 
-        visualizerCtx.fillStyle = 'rgba(0, 0, 0, 0.15)'; // Un poco más de estela
+        visualizerCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         visualizerCtx.fillRect(0, 0, visualizer.width, visualizer.height);
 
         const barWidth = (visualizer.width / bufferLength);
         let x = 0;
 
-        // Calcular la energía de los bajos para la reactividad
-        let bassEnergy = 0;
-        for (let i = 0; i < 8; i++) {
-            bassEnergy += dataArray[i];
-        }
-        const normalizedBass = bassEnergy / (8 * 255); // Normalizar entre 0 y 1
+        // Calcular la energía promedio para un piso dinámico
+        const totalEnergy = dataArray.reduce((sum, value) => sum + value, 0);
+        const averageEnergy = totalEnergy / bufferLength;
+        
+        // El piso mínimo reacciona a la energía promedio, con un tope
+        const dynamicFloor = Math.min(averageEnergy / 255 * visualizer.height * 0.4, visualizer.height * 0.15);
 
         for (let i = 0; i < bufferLength; i++) {
-            // Aumentar la ganancia significativamente en el lado derecho
-            const gain = 1 + (i / bufferLength) * 2.5;
-            
-            let barHeight = dataArray[i] * (visualizer.height / 255) * 0.9 * gain;
+            // Reducir la potencia de amplificación para evitar saturación
+            const amplifiedValue = Math.pow(dataArray[i] / 255, 0.8) * 255;
 
-            // Añadir "ruido" reactivo más fuerte
-            if (i > bufferLength / 3) {
-                const noise = Math.random() * normalizedBass * 40; // Ruido de hasta 40px
-                barHeight += noise;
+            // Reducir la ganancia lineal
+            const gain = 1 + (i / bufferLength) * 0.8;
+            
+            let barHeight = (amplifiedValue / 255) * visualizer.height * gain;
+
+            // Aplicar el piso dinámico, pero permitir que el silencio sea silencio
+            if (averageEnergy > 2) { // Umbral pequeño para el piso
+                 barHeight = Math.max(barHeight, dynamicFloor);
+            } else {
+                 barHeight = 0;
             }
 
-            const barHue = (hue + i * 2.5) % 360;
+            const barHue = (hue + i * 2.0) % 360;
             visualizerCtx.fillStyle = `hsl(${barHue}, 90%, 55%)`;
             visualizerCtx.shadowColor = `hsl(${barHue}, 90%, 50%)`;
             visualizerCtx.shadowBlur = 5;
 
-            // Dibuja las barras desde abajo, asegurando que no sean más altas que el canvas
+            // Dibuja las barras desde abajo
             visualizerCtx.fillRect(x, visualizer.height - barHeight, barWidth, Math.min(barHeight, visualizer.height));
 
-            x += barWidth + 1; // +1 para el espacio entre barras
+            x += barWidth + 1;
         }
         visualizerCtx.shadowBlur = 0;
     }

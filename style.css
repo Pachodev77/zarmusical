@@ -35,7 +35,6 @@ body {
     font-stretch: ultra-expanded; /* Hace las letras más estrechas y altas */
     letter-spacing: 0.05em; /* Espaciado entre letras original */
     text-align: center;
-    margin: 40px 20px 20px;
     color: var(--primary-color);
     -webkit-text-stroke: 0.1px #ffffff;
     z-index: 1;
@@ -47,7 +46,7 @@ body {
     height: auto;
     transform: scaleY(1.8); /* Aumentado aún más el factor de escala vertical */
     transform-origin: center; /* Asegura que la transformación sea desde el centro */
-    margin: 30px 20px 30px; /* Ajustado el margen vertical para más espacio */
+    margin: 80px 20px 30px; /* Ajustado el margen vertical para más espacio */
 }
 
 #soundsphere-title span {
@@ -220,7 +219,7 @@ body {
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    padding: 20px;
+    padding: 100px 20px 20px 20px;
 }
 
 body > h1 {
@@ -598,7 +597,7 @@ header h1 {
     width: 100vw;
     min-height: 100vh;
     margin: 0;
-    padding: 0;
+    padding: 20px 0 0 0; /* Adjusted padding-top for mobile */
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
